@@ -87,6 +87,9 @@ def main() -> int:
             all_passed = True
             for i in indices:
                 query_emb = [embs[i]]
+                # A chunk queried with its own embedding should always be rank #1.
+                # Cosine distance < 0.05 means near-identical vectors — confirms
+                # the stored embedding matches what the model would produce today.
                 result = collection.query(
                     query_embeddings=query_emb,
                     n_results=3,

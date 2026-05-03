@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { queryChroma, queryTrader, buildPrompt } from "@/lib/rag";
 import { callLLM, getLLMProvider } from "@/lib/llm";
 
+// In-process rate limiter: 60 requests per IP per minute.
+// Resets per window rather than sliding — simple and sufficient for local/small-scale use.
+// Replace with Redis or an edge middleware for multi-instance deployments.
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 60;
 const requestCounts = new Map<string, { count: number; reset: number }>();

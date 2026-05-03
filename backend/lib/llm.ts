@@ -1,5 +1,6 @@
-// lib/llm.ts — copied from nu-finance; unchanged.
-// Returns Gemini or Mistral based on LLM_PROVIDER env var.
+// lib/llm.ts — LLM dispatch layer.
+// Selects Gemini or Mistral at runtime via LLM_PROVIDER env var so the
+// RAG pipeline can switch models without touching application code.
 
 export type LLMProvider = "gemini" | "mistral";
 
@@ -32,6 +33,7 @@ async function callGemini(prompt: string): Promise<string> {
   }
 
   const data = await res.json();
+  // Navigate Gemini's nested response envelope: candidates[0].content.parts[0].text
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 }
 

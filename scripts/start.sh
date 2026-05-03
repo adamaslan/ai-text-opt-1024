@@ -26,6 +26,8 @@ echo "[2/3] Starting embed service on 127.0.0.1:8001..."
 uvicorn embed_service:app --host 127.0.0.1 --port 8001 --log-level warning &
 EMBED_PID=$!
 echo "      PID=$EMBED_PID"
+# 3s gives the embed service time to load the 1.47 GB model before the
+# backend starts accepting requests that would call /embed on startup.
 sleep 3
 
 # 3. Next.js backend

@@ -36,6 +36,9 @@ _model: SentenceTransformer | None = None
 
 
 def get_model() -> SentenceTransformer:
+    # Lazy singleton: the 1.47 GB model loads once on first request (or at
+    # startup via the on_event hook below) and stays resident for the process
+    # lifetime. Re-loading per request would cost ~3s each time.
     global _model
     if _model is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -70,6 +73,8 @@ async def embed(req: EmbedRequest) -> EmbedResponse:
         raise HTTPException(status_code=400, detail="texts must be non-empty")
 
     model = get_model()
+    # e5 asymmetric prefix: queries get "Query: ", indexed passages get "Passage: "
+    # (applied in ingest.py). Mismatching the prefix at query time degrades recall.
     prefix = "Query: " if req.is_query and "e5" in MODEL_NAME.lower() else ""
     processed = [f"{prefix}{t.strip()}" if t.strip() else "" for t in req.texts]
 

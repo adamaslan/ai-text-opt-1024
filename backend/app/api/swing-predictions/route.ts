@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFileSync } from "fs";
 import { join } from "path";
 
+// GCP3 backend runs the Python yfinance scanner that scores swing candidates.
+// Cold start on Cloud Run can take 30-60s; the 90s timeout gives it headroom.
 const GCP3_BACKEND_URL = process.env.GCP3_BACKEND_URL || "http://localhost:8080";
 const FETCH_TIMEOUT_MS = 90_000; // yfinance scan of 250 stocks takes ~60s cold
-const MAX_RETRIES = 1;
+const MAX_RETRIES = 1;           // one retry covers transient Cloud Run cold-starts
 const RETRY_DELAY_MS = 2_000;
 
 function sleep(ms: number) {

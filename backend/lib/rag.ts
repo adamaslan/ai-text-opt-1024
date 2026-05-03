@@ -70,6 +70,9 @@ export async function queryChroma(
   const queryHash = crypto.createHash("sha1").update(queryText).digest("hex").slice(0, 8);
   const nResults = Math.min(options.nResults ?? RAG_TOP_K, Number(process.env.RAG_MAX_TOP_K ?? 50));
 
+  // Embed the query and fetch the collection concurrently — getCollection()
+  // does a heartbeat round-trip so overlapping it with the embed call saves
+  // ~50-100 ms on every request.
   const [queryEmbedding, collection] = await Promise.all([
     embedQuery(queryText),
     getCollection(),
@@ -125,7 +128,9 @@ export async function queryChroma(
   return { context, sources, empty: false };
 }
 
-/** Trader-filtered query — restricts to specific source files. */
+/** Trader-filtered query — restricts to specific source files.
+ *  Uses ChromaDB's $in metadata filter so only chunks from the chosen
+ *  trader's Q&A file are returned, keeping T1 and T2 answers isolated. */
 export async function queryTrader(
   queryText: string,
   traderTag: "T1" | "T2"
