@@ -11,3 +11,10 @@ __pycache__/
 .DS_Store
 .next/
 dist/
+
+# apps/
+apps/*/node_modules/
+apps/*/.next/
+apps/trader-chat/.env
+apps/trader-chat/test-results/
+apps/trader-chat/playwright-report/
