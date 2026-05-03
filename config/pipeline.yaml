@@ -1,0 +1,59 @@
+# ai-text-opt-1024 pipeline configuration
+# Chroma Cloud pricing (2026-05):
+#   $2.50/GB written  |  $0.33/GB stored/mo
+#   $0.0075/TB queried + $0.09/GB returned
+#   $0.03/fork  |  $0.04/GiB sync  |  $0.01/page extracted  |  $0.01/page scraped
+#
+# Cost strategy:
+#   1. Embed once locally (SentenceTransformer) — no per-token API cost
+#   2. Pass pre-computed float32 vectors — no Chroma embedding API calls
+#   3. Return only ids+distances by default — minimise GB-returned charge
+#   4. Sync / Fork / doc-extract features disabled ($0)
+#   5. Content-hash dedupe — unchanged chunks skip re-upsert on rerun
+
+embedding:
+  model_name: "intfloat/e5-large-v2"
+  batch_size: 32
+  use_gpu: true
+  text_column: "Ideas"
+  save_interval: 100
+
+  # File-type-aware chunking. e5-large-v2 truncates at 512 tokens; prose
+  # ceiling is 480 to leave room for the "Passage: " prefix.
+  prose_chunk_size: 480
+  prose_chunk_overlap: 96            # ~20% — boundary recall on dense prose
+  qa_chunk_size: 300
+  qa_chunk_overlap: 40               # ~13% — Q&A units are short and atomic
+  min_chunk_tokens: 80               # drop stub chunks (lone headings, etc.)
+
+  # Filename patterns that indicate Q&A files
+  qa_patterns:
+    - "t1-"
+    - "t2-"
+    - "-qa.md"
+    - "-100-questions"
+
+chroma:
+  mode: "local"                         # "local" | "cloud"
+  local_persist_dir: "chroma_db"
+  collection_name: "ideas_1024d"
+  distance_metric: "cosine"
+  hnsw_ef_construction: 200
+  hnsw_M: 32
+  hnsw_ef_search: 100
+  default_n_results: 10
+  max_n_results: 50
+  # Free-tier optimisation: omit "embeddings" from query_include — pulling
+  # 4 KB × top_k vectors back over the wire on every query inflates the
+  # GB-returned charge by 50–80%. Re-add only if the backend needs raw vectors.
+  query_include:
+    - "documents"
+    - "metadatas"
+    - "distances"
+
+io:
+  docs_root: "../ai-text-opt/docs/trader-qa"
+  output_csv: "data/output_1024d.csv"
+  output_pkl: "data/output_1024d.pkl"
+  checkpoint_file: "data/ingest.checkpoint.json"
+  log_dir: "logs"

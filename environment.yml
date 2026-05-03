@@ -1,0 +1,19 @@
+name: ai-text-opt-1024
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - sentence-transformers
+  - pytorch
+  - pip
+  - pip:
+    - chromadb
+    - llama-index-core
+    - python-dotenv
+    - tqdm
+    - fastapi
+    - uvicorn[standard]
+    - httpx

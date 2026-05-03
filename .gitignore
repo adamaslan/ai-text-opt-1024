@@ -1,0 +1,13 @@
+.env
+*.env.local
+chroma_db/
+data/*.pkl
+data/*.checkpoint.*
+data/ingest.checkpoint.json
+logs/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+.next/
+dist/
