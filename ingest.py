@@ -78,7 +78,9 @@ MAX_BATCH_RETRIES = 3
 CHECKPOINT_FILE = Path("data/ingest.checkpoint.json")
 BUDGET_SOFT = float(os.getenv("CHROMA_BUDGET_SOFT", "5.00"))
 
-# Chroma Cloud pricing constants
+# Chroma Cloud pricing constants (2026-05 rates).
+# Vector cost dominates: 1024 floats × 4 bytes = 4 KB per chunk.
+# At $2.50/GB written, 10 K chunks costs ~$0.10 — well under the $5 soft cap.
 BYTES_PER_FLOAT32 = 4
 DIMS = 1024
 WRITE_COST_PER_GB = 2.50
@@ -125,6 +127,8 @@ def load_checkpoint() -> Dict[str, str]:
 
 
 def save_checkpoint(ingested: Dict[str, str]) -> None:
+    # Written after every successful upsert batch so a Ctrl+C mid-run
+    # only re-processes the chunks that weren't confirmed to Chroma yet.
     CHECKPOINT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(CHECKPOINT_FILE, "w") as f:
         json.dump(ingested, f)
@@ -242,6 +246,9 @@ class EmbeddingModel:
         logger.info("Embedding model ready: %dD verified", DIMS)
 
     def _preprocess(self, text: str) -> str:
+        # e5 models require asymmetric prefixes: "Passage: " at index time,
+        # "Query: " at query time. Without these the model produces lower-quality
+        # embeddings because it was fine-tuned with them.
         if "e5" in self.model_name.lower():
             return f"Passage: {text}"
         return text
@@ -293,7 +300,7 @@ def get_or_create_collection(client, name: str):
             "embedding_model": EMBEDDING_MODEL,
             "embedding_dimension": str(DIMS),
         },
-        embedding_function=None,  # pre-computed vectors — no external API call
+        embedding_function=None,  # pre-computed — Chroma never calls an external embed API
     )
     logger.info("Collection '%s' ready (count=%d)", name, collection.count())
     return collection
@@ -392,7 +399,10 @@ def main() -> int:
         logger.error("No chunks produced — aborting")
         return 1
 
-    # Step 3: dedupe via checkpoint
+    # Step 3: dedupe via checkpoint.
+    # Compare each chunk's sha1 against the stored hash; only re-embed if the
+    # text changed. Changing chunk_size invalidates all hashes — bump
+    # CHROMA_COLLECTION_VERSION when doing so to land in a fresh collection.
     checkpoint = load_checkpoint()
     new_chunks = [c for c in chunks if checkpoint.get(c.chunk_id) != c.content_hash]
     skipped = len(chunks) - len(new_chunks)

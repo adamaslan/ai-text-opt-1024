@@ -34,7 +34,10 @@ if (mode === "cloud") {
 
 const COLLECTION_BASE = process.env.CHROMA_COLLECTION ?? "ideas_1024d";
 const COLLECTION_VERSION = process.env.CHROMA_COLLECTION_VERSION ?? "1";
-// Ingest writes to staging; query reads from staging until promoted
+// The backend queries the _staging collection directly. ingest.py writes there
+// and validates before swapping — so staging IS the live collection in practice.
+// Bump CHROMA_COLLECTION_VERSION to roll forward to a fresh collection without
+// touching the old one (safe rollback by decrementing the version).
 export const COLLECTION_NAME = `${COLLECTION_BASE}_v${COLLECTION_VERSION}_staging`;
 
 let _client: ChromaClient | null = null;

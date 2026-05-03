@@ -6,6 +6,8 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
+      // Forward all /api/* calls to the Next.js backend on :3001 so the
+      // Vite dev server and the API server share a single origin in development.
       "/api": {
         target: "http://localhost:3001",
         changeOrigin: true,
