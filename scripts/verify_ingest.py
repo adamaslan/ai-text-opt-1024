@@ -74,6 +74,10 @@ def _self_match_batch(collection, ids: list, embs: list) -> tuple[int, int]:
             n_results=3,
             include=["distances"],
         )
+        if not result["ids"] or not result["ids"][0]:
+            failed += 1
+            check(f"chunk {ids[idx][:12]}… rank#1", False, "No results returned by query")
+            continue
         top_id = result["ids"][0][0]
         top_dist = result["distances"][0][0]
         ok = top_id == ids[idx] and top_dist < SELF_MATCH_DIST_THRESHOLD

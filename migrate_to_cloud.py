@@ -34,7 +34,7 @@ load_dotenv()
 
 LOCAL_COLLECTION = os.getenv("LOCAL_COLLECTION", "ideas_1024d_v2_staging")
 LOCAL_PATH = os.getenv("CHROMA_PERSIST_DIR", "chroma_db")
-CLOUD_COLLECTION = os.getenv("CHROMA_COLLECTION", "t1-t2a")
+CLOUD_COLLECTION = os.getenv("CHROMA_COLLECTION", "ideas_1024d")
 BATCH_SIZE = int(os.getenv("MIGRATE_BATCH_SIZE", "100"))
 
 
@@ -99,7 +99,14 @@ def main(force: bool = False, dry_run: bool = False) -> int:
     cloud = _cloud_client()
     dst = cloud.get_or_create_collection(
         CLOUD_COLLECTION,
-        metadata={"hnsw:space": "cosine", "embedding_dimension": "1024"},
+        metadata={
+            "hnsw:space":           "cosine",
+            "hnsw:construction_ef": 200,
+            "hnsw:M":               32,
+            "hnsw:search_ef":       100,
+            "embedding_model":      os.getenv("EMBEDDING_MODEL", "intfloat/e5-large-v2"),
+            "embedding_dimension":  "1024",
+        },
     )
     cloud_count_before = dst.count()
     print(f"Cloud  collection: {cloud_count_before} chunks (before)")

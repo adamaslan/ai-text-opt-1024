@@ -73,7 +73,7 @@ interface ToolResult {
   result: Record<string, unknown>;
 }
 
-function executeTool(name: string, args: Record<string, string>): Record<string, unknown> {
+async function executeTool(name: string, args: Record<string, string>): Promise<Record<string, unknown>> {
   switch (name) {
     case "get_current_price": {
       // Stub: replace with a real market data fetch (e.g. Yahoo Finance, Polygon)
@@ -145,12 +145,12 @@ export async function callLLM(prompt: string): Promise<LLMResponse> {
     if (!fnCallParts.length) break;
 
     const modelPart = candidate.content;
-    const functionResponses = fnCallParts.map((part: any) => {
+    const functionResponses = await Promise.all(fnCallParts.map(async (part: any) => {
       const fnCall = part.functionCall;
-      const result = executeTool(fnCall.name, fnCall.args ?? {});
+      const result = await executeTool(fnCall.name, fnCall.args ?? {});
       toolResults.push({ name: fnCall.name, result });
       return { functionResponse: { name: fnCall.name, response: result } };
-    });
+    }));
 
     contents = [
       ...contents,

@@ -361,8 +361,17 @@ def upsert_chunks(
 
 # ── Atomic staging swap ───────────────────────────────────────────────────────
 
-def validate_and_swap(client, staging_name: str, target_name: str, expected_count: int) -> None:
-    """Validate staging collection then rename it to target, replacing old target."""
+def validate_and_swap(client, staging_name: str, expected_count: int) -> None:
+    """
+    Validate the staging collection, then delete every other collection that
+    shares the COLLECTION_BASE prefix so exactly one collection exists at all
+    times.
+
+    ChromaDB has no rename operation, so staging IS the live collection.
+    The cleanup step prevents stale collections from accumulating when
+    CHROMA_COLLECTION_VERSION is bumped (old _v1_staging, _v2_staging, etc.
+    would otherwise persist forever alongside the current version).
+    """
     staging = client.get_collection(staging_name, embedding_function=None)
     actual = staging.count()
     if actual < expected_count:
@@ -371,17 +380,25 @@ def validate_and_swap(client, staging_name: str, target_name: str, expected_coun
         )
     logger.info("Staging validated: %d chunks (expected >= %d)", actual, expected_count)
 
-    # Delete old target if it exists
+    # Delete every collection that shares COLLECTION_BASE as a prefix but is
+    # not the current staging collection. This covers:
+    #   - previous version stagings  (ideas_1024d_v1_staging)
+    #   - non-staging targets left by old code  (ideas_1024d_v2)
+    #   - any other leftover from a failed mid-swap run
     try:
-        client.delete_collection(target_name)
-        logger.info("Deleted old collection '%s'", target_name)
-    except Exception:
-        pass
+        all_cols = [c.name for c in client.list_collections()]
+    except Exception as exc:
+        logger.warning("Could not list collections for cleanup: %s", exc)
+        all_cols = []
 
-    # ChromaDB has no rename — re-fetch staging and upsert into target
-    # (staging IS target for PersistentClient since it persists by name)
-    # In practice: just rename by creating target and deleting staging
-    # For simplicity with PersistentClient, we treat staging as the live collection.
+    for name in all_cols:
+        if name != staging_name and name.startswith(COLLECTION_BASE):
+            try:
+                client.delete_collection(name)
+                logger.info("Deleted stale collection '%s'", name)
+            except Exception as exc:
+                logger.warning("Could not delete stale collection '%s': %s", name, exc)
+
     logger.info("Collection '%s' is live with %d chunks", staging_name, actual)
 
 
@@ -467,7 +484,7 @@ def main() -> int:
 
     # Step 7: validate and swap staging → live
     try:
-        validate_and_swap(client, STAGING_NAME, COLLECTION_NAME, len(new_chunks))
+        validate_and_swap(client, STAGING_NAME, len(new_chunks))
     except Exception as exc:
         logger.error("Staging validation failed: %s", exc)
         return 1
