@@ -75,7 +75,17 @@ QA_PATTERNS = ("t1-", "t2-", "-qa.md", "-100-questions")
 
 MAX_BATCH_RETRIES = 3
 
-CHECKPOINT_FILE = Path("data/ingest.checkpoint.json")
+# Checkpoint files are scoped by mode so a local run and a cloud run never
+# share state. This prevents a chunk that was successfully upserted to the
+# cloud collection from being skipped when the local collection is rebuilt
+# from scratch (or vice versa).
+_CHECKPOINT_OVERRIDE = os.getenv("CHECKPOINT_FILE")
+CHECKPOINT_FILE = (
+    Path(_CHECKPOINT_OVERRIDE)
+    if _CHECKPOINT_OVERRIDE
+    else Path(f"data/ingest.{CHROMA_MODE}.checkpoint.json")
+)
+
 BUDGET_SOFT = float(os.getenv("CHROMA_BUDGET_SOFT", "5.00"))
 
 # Chroma Cloud pricing constants (2026-05 rates).
@@ -381,6 +391,7 @@ def main() -> int:
     logger.info("=" * 60)
     logger.info("ai-text-opt-1024 ingest pipeline")
     logger.info("Mode: %s | Collection: %s", CHROMA_MODE, COLLECTION_NAME)
+    logger.info("Checkpoint: %s", CHECKPOINT_FILE)
     logger.info("=" * 60)
 
     Path("logs").mkdir(exist_ok=True)

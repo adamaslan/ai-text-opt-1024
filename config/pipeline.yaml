@@ -55,5 +55,7 @@ io:
   docs_root: "../ai-text-opt/docs/trader-qa"
   output_csv: "data/output_1024d.csv"
   output_pkl: "data/output_1024d.pkl"
-  checkpoint_file: "data/ingest.checkpoint.json"
+  # Checkpoint files are mode-scoped at runtime: data/ingest.{local|cloud}.checkpoint.json
+  # Override with CHECKPOINT_FILE env var if a custom path is needed.
+  checkpoint_file: "data/ingest.{CHROMA_MODE}.checkpoint.json"
   log_dir: "logs"

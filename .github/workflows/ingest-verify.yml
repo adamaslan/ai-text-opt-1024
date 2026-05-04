@@ -1,0 +1,209 @@
+name: Ingest & Verify
+
+on:
+  push:
+    branches: [main, "feat/**"]
+    paths:
+      - "ingest.py"
+      - "embed_service.py"
+      - "scripts/verify_ingest.py"
+      - "config/pipeline.yaml"
+      - "environment.yml"
+      - "tests/**"
+  pull_request:
+    paths:
+      - "ingest.py"
+      - "embed_service.py"
+      - "scripts/verify_ingest.py"
+      - "config/pipeline.yaml"
+      - "environment.yml"
+      - "tests/**"
+  workflow_dispatch:
+
+env:
+  CHROMA_MODE: local
+  CHROMA_COLLECTION: ideas_1024d
+  CHROMA_COLLECTION_VERSION: "2"
+  EMBEDDING_MODEL: intfloat/e5-large-v2
+  EMBEDDING_BATCH_SIZE: "32"
+  PROSE_CHUNK_SIZE: "480"
+  PROSE_CHUNK_OVERLAP: "96"
+  QA_CHUNK_SIZE: "300"
+  QA_CHUNK_OVERLAP: "40"
+  MIN_CHUNK_TOKENS: "80"
+  EMBED_SERVICE_URL: http://127.0.0.1:8001
+  # Self-match sample size used by verify_ingest.py
+  VERIFY_SELF_MATCH_N: "20"
+
+jobs:
+  verify:
+    name: Ingest → Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        shell: bash -el {0}  # required for conda activate to work in each step
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # mamba resolves deps 2–5× faster than conda. setup-miniconda installs
+      # mamba alongside conda; we then use `mamba env create` exclusively.
+      - name: Set up mamba / conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest   # ships mamba by default
+          activate-environment: ai-text-opt-1024
+          environment-file: environment.yml
+          use-mamba: true
+          # Cache the whole solved env across identical environment.yml runs.
+          cache-environment: true
+
+      # PyTorch CPU wheel must be installed separately because conda-forge
+      # ships the GPU build and we don't need CUDA in CI.
+      - name: Install CPU-only PyTorch
+        run: |
+          mamba install -y pytorch cpuonly -c pytorch
+
+      # Cache the ~1.47 GB e5-large-v2 model weights across runs.
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-e5-large-v2-${{ runner.os }}
+
+      # Docs live in a sibling repo. Shallow-clone just the needed subtree.
+      - name: Check out trader-qa docs
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository_owner }}/ai-text-opt
+          path: ../ai-text-opt
+          sparse-checkout: docs/trader-qa
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+        continue-on-error: true  # allow run with stub docs if repo is private
+
+      # Provide minimal stub docs when the sibling repo is unavailable so the
+      # pipeline still validates chunking, embedding, and ChromaDB plumbing.
+      - name: Stub docs (fallback when sibling repo unavailable)
+        run: |
+          TARGET=../ai-text-opt/docs/trader-qa
+          if [ ! -d "$TARGET" ] || [ -z "$(ls -A $TARGET 2>/dev/null)" ]; then
+            mkdir -p "$TARGET"
+            python - <<'PY'
+          import pathlib
+          base = pathlib.Path("../ai-text-opt/docs/trader-qa")
+          # Two stub files: one T1 Q&A, one prose — exercises both splitter paths
+          stubs = {
+              "t1-tactical-opportunist-100-questions.md": "\n\n".join(
+                  f"Q{i}: What is momentum trading strategy {i}?\nA{i}: "
+                  + ("Momentum trading involves identifying and following the direction of "
+                     "price trends in financial markets using technical indicators. "
+                     "Traders look for strong directional moves with high volume. ") * 6
+                  for i in range(1, 31)
+              ),
+              "doc-swing-trading-primer.md": (
+                  "# Swing Trading Primer\n\n"
+                  + ("Swing trading is a style of trading that attempts to capture short- "
+                     "to medium-term gains in a stock (or any financial instrument) over "
+                     "a period of a few days to several weeks. Swing traders primarily "
+                     "use technical analysis to look for trading opportunities. ") * 40
+              ),
+          }
+          for name, content in stubs.items():
+              (base / name).write_text(content)
+          print(f"Wrote {len(stubs)} stub docs to {base}")
+          PY
+          fi
+
+      - name: Run ingest
+        run: python ingest.py
+
+      - name: Start embed service
+        run: |
+          uvicorn embed_service:app --host 127.0.0.1 --port 8001 &
+          # Wait up to 30 s for the service to become healthy
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8001/health > /dev/null; then
+              echo "Embed service ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run verification suite
+        run: python scripts/verify_ingest.py
+
+      - name: Run e2e RAG query tests (local collection)
+        run: python -m pytest tests/test_rag_e2e.py -v -m "e2e and not cloud"
+
+      - name: Upload ingest log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingest-log-${{ github.run_id }}
+          path: |
+            logs/ingest.log
+          if-no-files-found: ignore
+
+  rag-e2e-cloud:
+    name: RAG E2E (cloud collection)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Only run when cloud credentials are available — secrets are not passed to
+    # fork PRs, so this job silently skips rather than failing with 401s.
+    if: >
+      vars.CHROMA_TENANT != '' &&
+      secrets.CHROMA_API_KEY != ''
+    env:
+      CHROMA_MODE: cloud
+      CHROMA_COLLECTION: ideas_1024d
+      CHROMA_COLLECTION_VERSION: "2"
+      EMBED_SERVICE_URL: http://127.0.0.1:8001
+      EMBEDDING_MODEL: intfloat/e5-large-v2
+      RAG_SCORE_THRESHOLD: "0.75"
+      RAG_TOP_K: "8"
+
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up mamba / conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          activate-environment: ai-text-opt-1024
+          environment-file: environment.yml
+          use-mamba: true
+          cache-environment: true
+
+      - name: Install CPU-only PyTorch
+        run: mamba install -y pytorch cpuonly -c pytorch
+
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-e5-large-v2-${{ runner.os }}
+
+      - name: Start embed service
+        run: |
+          uvicorn embed_service:app --host 127.0.0.1 --port 8001 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8001/health > /dev/null; then
+              echo "Embed service ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run cloud e2e RAG tests
+        run: python -m pytest tests/test_rag_e2e.py -v -m "e2e"
+        env:
+          CHROMA_API_KEY: ${{ secrets.CHROMA_API_KEY }}
+          CHROMA_TENANT: ${{ vars.CHROMA_TENANT }}
+          CHROMA_DATABASE: ${{ vars.CHROMA_DATABASE }}
