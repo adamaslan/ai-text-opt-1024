@@ -21,7 +21,7 @@ function isRateLimited(ip: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
   if (isRateLimited(ip)) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }

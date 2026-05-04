@@ -39,7 +39,7 @@ function getRawClient(): ChromaClient {
       database: process.env.CHROMA_DATABASE!,
     });
   } else {
-    _client = new ChromaClient({ path: "http://localhost:8000" });
+    _client = new ChromaClient({ path: process.env.CHROMA_SERVER_URL ?? "http://localhost:8000" });
   }
   return _client;
 }
