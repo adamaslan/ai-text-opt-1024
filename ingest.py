@@ -141,7 +141,7 @@ def load_markdown_docs(docs_root: Path) -> List[Document]:
     if not docs_root.exists():
         raise FileNotFoundError(f"Docs directory not found: {docs_root}")
 
-    md_files = sorted(docs_root.glob("*.md"))
+    md_files = sorted(docs_root.rglob("*.md"))
     if not md_files:
         raise ValueError(f"No .md files found in {docs_root}")
 
