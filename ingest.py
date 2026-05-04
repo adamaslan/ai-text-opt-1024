@@ -55,7 +55,7 @@ DOCS_ROOT = Path(os.getenv("DOCS_ROOT", "../ai-text-opt/docs/trader-qa"))
 CHROMA_MODE = os.getenv("CHROMA_MODE", "local")
 CHROMA_PERSIST_DIR = "chroma_db"
 COLLECTION_BASE = os.getenv("CHROMA_COLLECTION", "ideas_1024d")
-COLLECTION_VERSION = int(os.getenv("CHROMA_COLLECTION_VERSION", "1"))
+COLLECTION_VERSION = int(os.getenv("CHROMA_COLLECTION_VERSION", "2"))
 COLLECTION_NAME = f"{COLLECTION_BASE}_v{COLLECTION_VERSION}"
 STAGING_NAME = f"{COLLECTION_NAME}_staging"
 
@@ -75,7 +75,17 @@ QA_PATTERNS = ("t1-", "t2-", "-qa.md", "-100-questions")
 
 MAX_BATCH_RETRIES = 3
 
-CHECKPOINT_FILE = Path("data/ingest.checkpoint.json")
+# Checkpoint files are scoped by mode so a local run and a cloud run never
+# share state. This prevents a chunk that was successfully upserted to the
+# cloud collection from being skipped when the local collection is rebuilt
+# from scratch (or vice versa).
+_CHECKPOINT_OVERRIDE = os.getenv("CHECKPOINT_FILE")
+CHECKPOINT_FILE = (
+    Path(_CHECKPOINT_OVERRIDE)
+    if _CHECKPOINT_OVERRIDE
+    else Path(f"data/ingest.{CHROMA_MODE}.checkpoint.json")
+)
+
 BUDGET_SOFT = float(os.getenv("CHROMA_BUDGET_SOFT", "5.00"))
 
 # Chroma Cloud pricing constants (2026-05 rates).
@@ -141,7 +151,7 @@ def load_markdown_docs(docs_root: Path) -> List[Document]:
     if not docs_root.exists():
         raise FileNotFoundError(f"Docs directory not found: {docs_root}")
 
-    md_files = sorted(docs_root.glob("*.md"))
+    md_files = sorted(docs_root.rglob("*.md"))
     if not md_files:
         raise ValueError(f"No .md files found in {docs_root}")
 
@@ -351,8 +361,17 @@ def upsert_chunks(
 
 # ── Atomic staging swap ───────────────────────────────────────────────────────
 
-def validate_and_swap(client, staging_name: str, target_name: str, expected_count: int) -> None:
-    """Validate staging collection then rename it to target, replacing old target."""
+def validate_and_swap(client, staging_name: str, expected_count: int) -> None:
+    """
+    Validate the staging collection, then delete every other collection that
+    shares the COLLECTION_BASE prefix so exactly one collection exists at all
+    times.
+
+    ChromaDB has no rename operation, so staging IS the live collection.
+    The cleanup step prevents stale collections from accumulating when
+    CHROMA_COLLECTION_VERSION is bumped (old _v1_staging, _v2_staging, etc.
+    would otherwise persist forever alongside the current version).
+    """
     staging = client.get_collection(staging_name, embedding_function=None)
     actual = staging.count()
     if actual < expected_count:
@@ -361,17 +380,25 @@ def validate_and_swap(client, staging_name: str, target_name: str, expected_coun
         )
     logger.info("Staging validated: %d chunks (expected >= %d)", actual, expected_count)
 
-    # Delete old target if it exists
+    # Delete every collection that shares COLLECTION_BASE as a prefix but is
+    # not the current staging collection. This covers:
+    #   - previous version stagings  (ideas_1024d_v1_staging)
+    #   - non-staging targets left by old code  (ideas_1024d_v2)
+    #   - any other leftover from a failed mid-swap run
     try:
-        client.delete_collection(target_name)
-        logger.info("Deleted old collection '%s'", target_name)
-    except Exception:
-        pass
+        all_cols = [c.name for c in client.list_collections()]
+    except Exception as exc:
+        logger.warning("Could not list collections for cleanup: %s", exc)
+        all_cols = []
 
-    # ChromaDB has no rename — re-fetch staging and upsert into target
-    # (staging IS target for PersistentClient since it persists by name)
-    # In practice: just rename by creating target and deleting staging
-    # For simplicity with PersistentClient, we treat staging as the live collection.
+    for name in all_cols:
+        if name != staging_name and name.startswith(COLLECTION_BASE):
+            try:
+                client.delete_collection(name)
+                logger.info("Deleted stale collection '%s'", name)
+            except Exception as exc:
+                logger.warning("Could not delete stale collection '%s': %s", name, exc)
+
     logger.info("Collection '%s' is live with %d chunks", staging_name, actual)
 
 
@@ -381,6 +408,7 @@ def main() -> int:
     logger.info("=" * 60)
     logger.info("ai-text-opt-1024 ingest pipeline")
     logger.info("Mode: %s | Collection: %s", CHROMA_MODE, COLLECTION_NAME)
+    logger.info("Checkpoint: %s", CHECKPOINT_FILE)
     logger.info("=" * 60)
 
     Path("logs").mkdir(exist_ok=True)
@@ -456,7 +484,7 @@ def main() -> int:
 
     # Step 7: validate and swap staging → live
     try:
-        validate_and_swap(client, STAGING_NAME, COLLECTION_NAME, len(new_chunks))
+        validate_and_swap(client, STAGING_NAME, len(new_chunks))
     except Exception as exc:
         logger.error("Staging validation failed: %s", exc)
         return 1

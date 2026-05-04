@@ -34,6 +34,7 @@ async function embedQuery(text: string): Promise<number[]> {
     method:  "POST",
     headers: { "Content-Type": "application/json" },
     body:    JSON.stringify({ texts: [text], is_query: true }),
+    signal:  AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`Embed service error ${res.status}: ${await res.text()}`);
   const data = await res.json();

@@ -21,7 +21,11 @@ function isRateLimited(ip: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  // req.ip is set by Vercel/Next.js edge runtime from a trusted internal header
+  // and cannot be spoofed by clients. Fall back to x-real-ip (also set by Vercel
+  // and most reverse proxies), then "unknown". Never use x-forwarded-for directly:
+  // it is client-controlled and trivially bypasses in-process rate limiting.
+  const ip = req.ip ?? req.headers.get("x-real-ip") ?? "unknown";
   if (isRateLimited(ip)) {
     return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
   }

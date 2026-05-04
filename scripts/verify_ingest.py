@@ -4,18 +4,21 @@ Verification suite — run after ingest to confirm everything is healthy.
 
 Checks:
   1. Collection count >= expected_min_chunks
-  2. Self-match test: 5 random chunks query themselves as rank #1 (distance < 0.05)
-  3. Collection metadata: embedding_dimension == 1024, distance_metric == cosine
-  4. Embed service reachable and returning 1024D vectors
+  2. Collection metadata: embedding_dimension == 1024, distance_metric == cosine
+  3. Embed service reachable and returning 1024D vectors
+  4. Self-match test: N random chunks query themselves as rank #1 (distance < 0.05)
+     N is controlled by VERIFY_SELF_MATCH_N (default 20).
+
+Exit codes:
+  0 — all checks passed
+  1 — one or more checks failed or ChromaDB unreachable
 """
 
 from __future__ import annotations
 
-import json
 import os
 import random
 import sys
-from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
@@ -28,6 +31,15 @@ COLLECTION_BASE = os.getenv("CHROMA_COLLECTION", "ideas_1024d")
 COLLECTION_VERSION = int(os.getenv("CHROMA_COLLECTION_VERSION", "1"))
 STAGING_NAME = f"{COLLECTION_BASE}_v{COLLECTION_VERSION}_staging"
 
+# Number of random chunks sampled for the self-match test.
+# CI sets this to 20 via VERIFY_SELF_MATCH_N; quick local runs can use 5.
+SELF_MATCH_N = int(os.getenv("VERIFY_SELF_MATCH_N", "20"))
+
+# Cosine distance threshold: a chunk queried with its own stored embedding
+# must land within this distance of itself to pass. Values < 0.05 indicate
+# the stored vector is essentially identical to what the model returns today.
+SELF_MATCH_DIST_THRESHOLD = float(os.getenv("VERIFY_SELF_MATCH_DIST", "0.05"))
+
 PASS = "\033[92mPASS\033[0m"
 FAIL = "\033[91mFAIL\033[0m"
 
@@ -39,6 +51,46 @@ def check(name: str, ok: bool, detail: str = "") -> bool:
     icon = PASS if ok else FAIL
     print(f"  [{icon}] {name}{': ' + detail if detail else ''}")
     return ok
+
+
+def _self_match_batch(collection, ids: list, embs: list) -> tuple[int, int]:
+    """
+    Query each chunk's stored embedding against the collection and verify it
+    ranks #1 within SELF_MATCH_DIST_THRESHOLD.
+
+    Returns (passed, failed) counts. Failures are printed individually so the
+    caller knows exactly which chunk IDs failed — useful when debugging a
+    partial re-embedding or a model swap.
+    """
+    passed = failed = 0
+    for i, idx in enumerate(range(len(ids))):
+        query_emb = [embs[idx]]
+        # A chunk queried with its own embedding should always be rank #1.
+        # Cosine distance < SELF_MATCH_DIST_THRESHOLD confirms the stored
+        # embedding matches what the model would produce today, and that HNSW
+        # index integrity is intact.
+        result = collection.query(
+            query_embeddings=query_emb,
+            n_results=3,
+            include=["distances"],
+        )
+        if not result["ids"] or not result["ids"][0]:
+            failed += 1
+            check(f"chunk {ids[idx][:12]}… rank#1", False, "No results returned by query")
+            continue
+        top_id = result["ids"][0][0]
+        top_dist = result["distances"][0][0]
+        ok = top_id == ids[idx] and top_dist < SELF_MATCH_DIST_THRESHOLD
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+            check(
+                f"chunk {ids[idx][:12]}… rank#1",
+                False,
+                f"top={top_id[:12]}… dist={top_dist:.4f}",
+            )
+    return passed, failed
 
 
 def main() -> int:
@@ -74,45 +126,43 @@ def main() -> int:
     except Exception as exc:
         check("Embed service reachable", False, str(exc))
 
-    # 4. Self-match test
-    print("\n[4] Self-match test (5 random chunks)")
+    # 4. Self-match test — sample SELF_MATCH_N random chunks from the pool
+    #    (capped at the collection size).
+    pool_size = min(max(SELF_MATCH_N * 4, 100), count)
+    actual_n = min(SELF_MATCH_N, pool_size)
+    print(f"\n[4] Self-match test ({actual_n} random chunks, dist<{SELF_MATCH_DIST_THRESHOLD})")
     try:
-        sample = collection.get(limit=min(50, count), include=["documents", "embeddings"])
+        sample = collection.get(
+            limit=pool_size,
+            include=["documents", "embeddings"],
+        )
         ids = sample["ids"]
-        docs = sample["documents"]
         embs = sample["embeddings"]
 
-        if len(ids) >= 5:
-            indices = random.sample(range(len(ids)), 5)
-            all_passed = True
-            for i in indices:
-                query_emb = [embs[i]]
-                # A chunk queried with its own embedding should always be rank #1.
-                # Cosine distance < 0.05 means near-identical vectors — confirms
-                # the stored embedding matches what the model would produce today.
-                result = collection.query(
-                    query_embeddings=query_emb,
-                    n_results=3,
-                    include=["distances"],
-                )
-                top_id = result["ids"][0][0]
-                top_dist = result["distances"][0][0]
-                ok = top_id == ids[i] and top_dist < 0.05
-                all_passed = all_passed and ok
-                if not ok:
-                    check(f"  chunk {ids[i][:12]}… rank#1", False, f"top={top_id[:12]}… dist={top_dist:.4f}")
-            if all_passed:
-                check("All 5 self-match rank#1 with dist<0.05", True)
+        if len(ids) < actual_n:
+            check(
+                f"Self-match (need >= {actual_n} chunks)",
+                False,
+                f"only {len(ids)} available",
+            )
         else:
-            check("Self-match (need >= 5 chunks)", False, f"only {len(ids)} available")
+            chosen = random.sample(range(len(ids)), actual_n)
+            chosen_ids = [ids[i] for i in chosen]
+            chosen_embs = [embs[i] for i in chosen]
+            passed, failed = _self_match_batch(collection, chosen_ids, chosen_embs)
+            check(
+                f"Self-match {passed}/{actual_n} rank#1 dist<{SELF_MATCH_DIST_THRESHOLD}",
+                failed == 0,
+                f"{failed} failures" if failed else "all passed",
+            )
     except Exception as exc:
         check("Self-match test", False, str(exc))
 
     # Summary
-    passed = sum(1 for _, ok, _ in results if ok)
+    passed_total = sum(1 for _, ok, _ in results if ok)
     total = len(results)
-    print(f"\n── Result: {passed}/{total} checks passed ─────────────────────────")
-    return 0 if passed == total else 1
+    print(f"\n── Result: {passed_total}/{total} checks passed ─────────────────────────")
+    return 0 if passed_total == total else 1
 
 
 if __name__ == "__main__":

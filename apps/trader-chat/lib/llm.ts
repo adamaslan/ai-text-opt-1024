@@ -73,7 +73,7 @@ interface ToolResult {
   result: Record<string, unknown>;
 }
 
-function executeTool(name: string, args: Record<string, string>): Record<string, unknown> {
+async function executeTool(name: string, args: Record<string, string>): Promise<Record<string, unknown>> {
   switch (name) {
     case "get_current_price": {
       // Stub: replace with a real market data fetch (e.g. Yahoo Finance, Polygon)
@@ -138,37 +138,34 @@ export async function callLLM(prompt: string): Promise<LLMResponse> {
   let data = await res.json();
   let candidate = data.candidates?.[0];
 
-  // Tool-use loop (Gemini may request one tool call per turn)
-  if (candidate?.content?.parts?.some((p: any) => p.functionCall)) {
-    const modelPart  = candidate.content;
-    const fnCall     = modelPart.parts.find((p: any) => p.functionCall).functionCall;
-    const toolResult = executeTool(fnCall.name, fnCall.args ?? {});
+  // Tool-use loop — Gemini may request multiple tools per turn and multiple turns
+  const MAX_TOOL_TURNS = 5;
+  for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
+    const fnCallParts = candidate?.content?.parts?.filter((p: any) => p.functionCall) ?? [];
+    if (!fnCallParts.length) break;
 
-    toolResults.push({ name: fnCall.name, result: toolResult });
+    const modelPart = candidate.content;
+    const functionResponses = await Promise.all(fnCallParts.map(async (part: any) => {
+      const fnCall = part.functionCall;
+      const result = await executeTool(fnCall.name, fnCall.args ?? {});
+      toolResults.push({ name: fnCall.name, result });
+      return { functionResponse: { name: fnCall.name, response: result } };
+    }));
 
-    // Re-submit with the tool result
     contents = [
       ...contents,
       { role: "model", parts: modelPart.parts },
-      {
-        role:  "user",
-        parts: [{
-          functionResponse: {
-            name:     fnCall.name,
-            response: toolResult,
-          },
-        }],
-      },
+      { role: "user", parts: functionResponses },
     ];
 
-    const res2 = await fetch(url, {
+    const followUp = await fetch(url, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ contents, tools: GEMINI_TOOLS }),
     });
 
-    if (!res2.ok) throw new Error(`Gemini follow-up error ${res2.status}: ${await res2.text()}`);
-    data      = await res2.json();
+    if (!followUp.ok) throw new Error(`Gemini follow-up error ${followUp.status}: ${await followUp.text()}`);
+    data      = await followUp.json();
     candidate = data.candidates?.[0];
   }
 

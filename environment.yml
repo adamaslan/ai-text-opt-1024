@@ -8,6 +8,7 @@ dependencies:
   - pandas
   - sentence-transformers
   - pytorch
+  - pytest
   - pip
   - pip:
     - chromadb
@@ -17,3 +18,4 @@ dependencies:
     - fastapi
     - uvicorn[standard]
     - httpx
+    - pydantic
