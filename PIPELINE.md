@@ -346,7 +346,7 @@ Lone headings and stray punctuation lines are dropped; they waste a write slot a
 ```python
 @dataclass
 class Chunk:
-    chunk_id:     str    # "{sha1(source_file)[:8]}_{chunk_idx:05d}"
+    chunk_id:     str    # "{sha1(source_file)}_{chunk_idx:05d}"
     text:         str    # Raw chunk text (no prefix applied yet)
     content_hash: str    # sha1(text) — dedup key
     source_file:  str    # e.g. "t1-tactical-opportunist-100-questions.md"
