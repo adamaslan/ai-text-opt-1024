@@ -55,7 +55,7 @@ DOCS_ROOT = Path(os.getenv("DOCS_ROOT", "../ai-text-opt/docs/trader-qa"))
 CHROMA_MODE = os.getenv("CHROMA_MODE", "local")
 CHROMA_PERSIST_DIR = "chroma_db"
 COLLECTION_BASE = os.getenv("CHROMA_COLLECTION", "ideas_1024d")
-COLLECTION_VERSION = int(os.getenv("CHROMA_COLLECTION_VERSION", "1"))
+COLLECTION_VERSION = int(os.getenv("CHROMA_COLLECTION_VERSION", "2"))
 COLLECTION_NAME = f"{COLLECTION_BASE}_v{COLLECTION_VERSION}"
 STAGING_NAME = f"{COLLECTION_NAME}_staging"
 

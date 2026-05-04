@@ -33,7 +33,7 @@ if (mode === "cloud") {
 }
 
 const COLLECTION_BASE = process.env.CHROMA_COLLECTION ?? "ideas_1024d";
-const COLLECTION_VERSION = process.env.CHROMA_COLLECTION_VERSION ?? "1";
+const COLLECTION_VERSION = process.env.CHROMA_COLLECTION_VERSION ?? "2";
 // The backend queries the _staging collection directly. ingest.py writes there
 // and validates before swapping — so staging IS the live collection in practice.
 // Bump CHROMA_COLLECTION_VERSION to roll forward to a fresh collection without
@@ -53,7 +53,7 @@ export function getRawClient(): ChromaClient {
       database: process.env.CHROMA_DATABASE!,
     });
   } else {
-    _client = new ChromaClient({ path: "http://localhost:8000" });
+    _client = new ChromaClient({ path: process.env.CHROMA_SERVER_URL ?? "http://localhost:8000" });
   }
   return _client;
 }
@@ -85,7 +85,6 @@ export async function getCollection(): Promise<Collection> {
 
 /** Field names used across all query calls. */
 export const FIELDS = {
-  TEXT: "text_content",
   SOURCE_FILE: "source_file",
   CHUNK_INDEX: "chunk_index",
   CHAR_LEN: "char_len",
