@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import { readFile } from "fs/promises";
 import { join } from "path";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -9,6 +9,16 @@ const RESEARCH_HEADERS = {
   "X-Research-Only": "true",
   "Cache-Control": "no-store",
 };
+
+const FORWARDED_REQUEST_HEADERS = [
+  "accept",
+  "authorization",
+  "content-type",
+  "x-api-key",
+  "x-request-id",
+  "x-correlation-id",
+  "x-research-only",
+] as const;
 
 function replaceRunId(value: unknown, runId: string): unknown {
   if (Array.isArray(value)) return value.map((item) => replaceRunId(item, runId));
@@ -23,14 +33,38 @@ function replaceRunId(value: unknown, runId: string): unknown {
   return value;
 }
 
-export function fixtureJson(fileName: string, runId?: string): Record<string, unknown> {
-  const raw = readFileSync(join(process.cwd(), "data", fileName), "utf-8");
+function forwardedHeaders(request: NextRequest) {
+  const headers = new Headers();
+
+  for (const name of FORWARDED_REQUEST_HEADERS) {
+    const value = request.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+
+  if (!headers.has("Content-Type") && request.method !== "GET") {
+    headers.set("Content-Type", "application/json");
+  }
+
+  return headers;
+}
+
+async function parseJsonResponse(response: Response): Promise<Record<string, unknown> | null> {
+  if (response.status === 204 || response.status === 205) return null;
+
+  const raw = await response.text();
+  if (!raw.trim()) return null;
+
+  return JSON.parse(raw) as Record<string, unknown>;
+}
+
+export async function fixtureJson(fileName: string, runId?: string): Promise<Record<string, unknown>> {
+  const raw = await readFile(join(process.cwd(), "data", fileName), "utf-8");
   const parsed = JSON.parse(raw) as Record<string, unknown>;
   return (runId ? replaceRunId(parsed, runId) : parsed) as Record<string, unknown>;
 }
 
-export function fixtureResponse(fileName: string, runId?: string) {
-  return NextResponse.json(fixtureJson(fileName, runId), {
+export async function fixtureResponse(fileName: string, runId?: string) {
+  return NextResponse.json(await fixtureJson(fileName, runId), {
     headers: {
       ...RESEARCH_HEADERS,
       "X-Data-Source": "local-fixture",
@@ -38,7 +72,7 @@ export function fixtureResponse(fileName: string, runId?: string) {
   });
 }
 
-export function triggerFixture(system: "swing" | "growth") {
+export async function triggerFixture(system: "swing" | "growth") {
   const now = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
   return NextResponse.json(
     {
@@ -71,14 +105,14 @@ export async function proxyAgentJson(
       method: request.method,
       signal: controller.signal,
       body,
-      headers: {
-        "Content-Type": request.headers.get("Content-Type") ?? "application/json",
-      },
+      headers: forwardedHeaders(request),
     });
 
-    if (!response.ok) return fixtureResponse(fallbackFile, fallbackRunId);
+    if (!response.ok) return await fixtureResponse(fallbackFile, fallbackRunId);
 
-    const payload = await response.json();
+    const payload = await parseJsonResponse(response);
+    if (!payload) return await fixtureResponse(fallbackFile, fallbackRunId);
+
     const researchHeader = response.headers.get("X-Research-Only") === "true";
     return NextResponse.json(payload, {
       headers: {
@@ -88,7 +122,7 @@ export async function proxyAgentJson(
       },
     });
   } catch {
-    return fixtureResponse(fallbackFile, fallbackRunId);
+    return await fixtureResponse(fallbackFile, fallbackRunId);
   } finally {
     clearTimeout(timeout);
   }
