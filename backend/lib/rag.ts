@@ -87,10 +87,10 @@ export async function queryChroma(
 
   const raw = await collection.query(queryArgs as any);
 
-  const ids: string[] = raw.ids[0] ?? [];
-  const docs: string[] = (raw.documents[0] ?? []) as string[];
-  const dists: number[] = raw.distances[0] ?? [];
-  const metas: any[] = raw.metadatas[0] ?? [];
+  const ids: string[] = raw.ids?.[0] ?? [];
+  const docs: string[] = (raw.documents?.[0] ?? []) as string[];
+  const dists: number[] = (raw.distances?.[0] ?? []) as number[];
+  const metas: any[] = raw.metadatas?.[0] ?? [];
 
   // Filter by score threshold (cosine distance — lower is better)
   const filtered = ids

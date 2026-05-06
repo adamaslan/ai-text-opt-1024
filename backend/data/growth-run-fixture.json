@@ -1,0 +1,453 @@
+{
+  "run_id": "growth_20260506_100000_manual",
+  "system": "growth",
+  "mode": "manual",
+  "status": "completed",
+  "started_at": "2026-05-06T10:00:00-04:00",
+  "completed_at": "2026-05-06T10:04:36-04:00",
+  "counts": {
+    "accepted": 2,
+    "watchlist": 1,
+    "rejected": 1,
+    "needs_review": 1
+  },
+  "llm_calls_used": 5,
+  "financial_statement_calls_used": 5,
+  "provider_cost_estimate_usd": 2.42,
+  "max_duration_seconds": 900,
+  "duration_seconds": 276,
+  "thresholds": {
+    "accept_threshold": 0.75,
+    "watchlist_threshold": 0.6,
+    "reject_threshold": 0.45
+  },
+  "research_only": true,
+  "universe": "quality_screener",
+  "max_candidates": 20,
+  "max_finalists": 5,
+  "symbols_seen": 84,
+  "finalists": 5,
+  "candidates": [
+    {
+      "run_id": "growth_20260506_100000_manual",
+      "ticker": "MSFT",
+      "growth_total_score": 0.86,
+      "decision": "accept",
+      "decision_reason": "Quality score is durable across revenue, ROIC, balance sheet, and tax-downside checks.",
+      "iterations_used": 1,
+      "mutation_history": [
+        {
+          "iteration": 1,
+          "mutation_type": "terminal_accept",
+          "value": true,
+          "reason": "B1 quality and B2 tax risk both cleared thresholds.",
+          "terminal": true
+        }
+      ],
+      "compliance_label": "research_only",
+      "score_trajectory": {
+        "ticker": "MSFT",
+        "score_trend": "improving",
+        "trend_window_runs": 4,
+        "prior_scores": [0.81, 0.82, 0.84, 0.86],
+        "trend_direction": "improving",
+        "run_dates": ["2026-04-15T18:00:00Z", "2026-04-22T18:00:00Z", "2026-04-29T18:00:00Z", "2026-05-06T18:00:00Z"],
+        "earnings_dates": ["", "", "", "2026-05-01T20:00:00Z"]
+      },
+      "direction": "accumulate",
+      "horizon": "5y-10y",
+      "is_stale": false,
+      "ai_degraded": false,
+      "latest_evidence": {
+        "ticker": "MSFT",
+        "direction": "accumulate",
+        "horizon": "5y-10y",
+        "quality_scores": {
+          "revenue_growth": 0.82,
+          "earnings_quality": 0.88,
+          "roic_trend": 0.92,
+          "moat_durability": 0.9,
+          "capital_allocation": 0.78,
+          "management_alignment": 0.74,
+          "valuation_discipline": 0.76,
+          "balance_sheet_strength": 0.94
+        },
+        "growth_quality_score": 0.86,
+        "hard_rejection_flags": [],
+        "supporting_evidence": [
+          "Revenue compound growth remains positive with low deceleration.",
+          "ROIC trend is high and stable.",
+          "Balance sheet stress test stayed above the configured coverage floor."
+        ],
+        "counter_evidence": [
+          "Valuation discipline is good, not exceptional."
+        ],
+        "source_freshness": {
+          "financials": "2026-05-04T12:00:00-04:00",
+          "insider_activity": "2026-05-05T18:30:00-04:00"
+        },
+        "deterministic_summary": "MSFT retained high quality across B1 dimensions with no hard rejection flags.",
+        "llm_summary": "The thesis remains a quality compounder profile rather than a valuation-reset bet.",
+        "ai_degraded": false,
+        "computed_at": "2026-05-06T10:02:18-04:00",
+        "is_stale": false,
+        "quality_score_details": {
+          "revenue_growth": { "metric": "12.4% 5y CAGR", "bracket": "10-14.9% bracket", "score": 0.82 },
+          "earnings_quality": { "metric": "FCF conversion 96%", "bracket": "90%+ bracket", "score": 0.88 },
+          "roic_trend": { "metric": "ROIC 28.1%", "bracket": "25%+ bracket", "score": 0.92 },
+          "moat_durability": { "metric": "enterprise switching costs", "bracket": "strong moat bracket", "score": 0.9 },
+          "capital_allocation": { "metric": "steady buybacks", "bracket": "disciplined bracket", "score": 0.78 },
+          "management_alignment": { "metric": "moderate insider ownership", "bracket": "aligned bracket", "score": 0.74 },
+          "valuation_discipline": { "metric": "fair value premium 8%", "bracket": "acceptable bracket", "score": 0.76 },
+          "balance_sheet_strength": { "metric": "net cash", "bracket": "fortress bracket", "score": 0.94 }
+        }
+      },
+      "latest_tax_risk": {
+        "ticker": "MSFT",
+        "after_tax_downside_score": 0.83,
+        "asset_location_fit_score": 0.82,
+        "dividend_tax_efficiency_score": 0.7,
+        "exit_flexibility_score": 0.86,
+        "growth_tax_risk_score": 0.81,
+        "key_question_answer": "tax_does_not_threaten_return",
+        "tax_complexity_flags": [],
+        "professional_review_required": false,
+        "assumptions": [
+          "Paper account bucket used for fixture run.",
+          "Qualified dividend treatment assumed for downside check.",
+          "No wash-sale block present."
+        ],
+        "computed_at": "2026-05-06T10:03:14-04:00"
+      }
+    },
+    {
+      "run_id": "growth_20260506_100000_manual",
+      "ticker": "GOOGL",
+      "growth_total_score": 0.8,
+      "decision": "accept",
+      "decision_reason": "Strong durability and cash generation offset a moderate valuation-discipline score.",
+      "iterations_used": 1,
+      "mutation_history": [],
+      "compliance_label": "research_only",
+      "score_trajectory": {
+        "ticker": "GOOGL",
+        "score_trend": "stable",
+        "trend_window_runs": 4,
+        "prior_scores": [0.79, 0.81, 0.8, 0.8],
+        "trend_direction": "stable",
+        "run_dates": ["2026-04-15T18:00:00Z", "2026-04-22T18:00:00Z", "2026-04-29T18:00:00Z", "2026-05-06T18:00:00Z"],
+        "earnings_dates": []
+      },
+      "direction": "accumulate",
+      "horizon": "5y-10y",
+      "is_stale": false,
+      "ai_degraded": false,
+      "latest_evidence": {
+        "ticker": "GOOGL",
+        "direction": "accumulate",
+        "horizon": "5y-10y",
+        "quality_scores": {
+          "revenue_growth": 0.78,
+          "earnings_quality": 0.84,
+          "roic_trend": 0.8,
+          "moat_durability": 0.88,
+          "capital_allocation": 0.7,
+          "management_alignment": 0.64,
+          "valuation_discipline": 0.74,
+          "balance_sheet_strength": 0.92
+        },
+        "growth_quality_score": 0.8,
+        "hard_rejection_flags": [],
+        "supporting_evidence": [
+          "Advertising and cloud cash generation remain durable.",
+          "Balance sheet strength is high."
+        ],
+        "counter_evidence": [
+          "AI capex increases near-term margin uncertainty."
+        ],
+        "source_freshness": {
+          "financials": "2026-05-04T12:00:00-04:00"
+        },
+        "deterministic_summary": "GOOGL cleared the quality gate with balanced sub-scores.",
+        "llm_summary": null,
+        "ai_degraded": false,
+        "computed_at": "2026-05-06T10:02:35-04:00",
+        "is_stale": false,
+        "quality_score_details": {
+          "revenue_growth": { "metric": "10.8% 5y CAGR", "bracket": "10-14.9% bracket", "score": 0.78 },
+          "earnings_quality": { "metric": "FCF conversion 91%", "bracket": "90%+ bracket", "score": 0.84 },
+          "roic_trend": { "metric": "ROIC 22.6%", "bracket": "20-24.9% bracket", "score": 0.8 },
+          "moat_durability": { "metric": "search distribution scale", "bracket": "strong moat bracket", "score": 0.88 },
+          "capital_allocation": { "metric": "capex rising", "bracket": "mixed bracket", "score": 0.7 },
+          "management_alignment": { "metric": "dual-class structure", "bracket": "mixed bracket", "score": 0.64 },
+          "valuation_discipline": { "metric": "fair value premium 11%", "bracket": "acceptable bracket", "score": 0.74 },
+          "balance_sheet_strength": { "metric": "net cash", "bracket": "fortress bracket", "score": 0.92 }
+        }
+      },
+      "latest_tax_risk": {
+        "ticker": "GOOGL",
+        "after_tax_downside_score": 0.8,
+        "asset_location_fit_score": 0.79,
+        "dividend_tax_efficiency_score": 0.9,
+        "exit_flexibility_score": 0.78,
+        "growth_tax_risk_score": 0.81,
+        "key_question_answer": "tax_does_not_threaten_return",
+        "tax_complexity_flags": [],
+        "professional_review_required": false,
+        "assumptions": [
+          "No current dividend drag assumed.",
+          "Long-term capital gain holding period assumed for downside case."
+        ],
+        "computed_at": "2026-05-06T10:03:20-04:00"
+      }
+    },
+    {
+      "run_id": "growth_20260506_100000_manual",
+      "ticker": "AMZN",
+      "growth_total_score": 0.67,
+      "decision": "watchlist",
+      "decision_reason": "Quality is solid, but valuation and capital allocation need a cleaner margin-of-safety pass.",
+      "iterations_used": 2,
+      "mutation_history": [
+        {
+          "iteration": 1,
+          "mutation_type": "valuation_stress_test",
+          "value": "bear case multiple",
+          "reason": "Initial score was close to accept but valuation discipline was marginal."
+        }
+      ],
+      "compliance_label": "research_only",
+      "score_trajectory": {
+        "ticker": "AMZN",
+        "score_trend": "stable",
+        "trend_window_runs": 4,
+        "prior_scores": [0.66, 0.68, 0.67, 0.67],
+        "trend_direction": "stable",
+        "run_dates": ["2026-04-15T18:00:00Z", "2026-04-22T18:00:00Z", "2026-04-29T18:00:00Z", "2026-05-06T18:00:00Z"],
+        "earnings_dates": []
+      },
+      "direction": "hold",
+      "horizon": "2y-5y",
+      "is_stale": false,
+      "ai_degraded": true,
+      "latest_evidence": {
+        "ticker": "AMZN",
+        "direction": "hold",
+        "horizon": "2y-5y",
+        "quality_scores": {
+          "revenue_growth": 0.76,
+          "earnings_quality": 0.69,
+          "roic_trend": 0.62,
+          "moat_durability": 0.86,
+          "capital_allocation": 0.6,
+          "management_alignment": 0.68,
+          "valuation_discipline": 0.54,
+          "balance_sheet_strength": 0.72
+        },
+        "growth_quality_score": 0.67,
+        "hard_rejection_flags": [],
+        "supporting_evidence": [
+          "Cloud and advertising keep the moat score high.",
+          "Revenue trajectory remains positive."
+        ],
+        "counter_evidence": [
+          "ROIC trend is below the highest-quality peers.",
+          "Valuation discipline failed the first stress pass."
+        ],
+        "source_freshness": {
+          "financials": "2026-05-04T12:00:00-04:00"
+        },
+        "deterministic_summary": "AMZN is durable but not yet strong enough for acceptance under the current valuation guardrail.",
+        "llm_summary": "Provider fallback completed; qualitative summary was shortened.",
+        "ai_degraded": true,
+        "computed_at": "2026-05-06T10:02:58-04:00",
+        "is_stale": false,
+        "quality_score_details": {
+          "revenue_growth": { "metric": "10.1% 5y CAGR", "bracket": "10-14.9% bracket", "score": 0.76 },
+          "earnings_quality": { "metric": "FCF conversion 78%", "bracket": "70-89.9% bracket", "score": 0.69 },
+          "roic_trend": { "metric": "ROIC 13.9%", "bracket": "10-14.9% bracket", "score": 0.62 },
+          "moat_durability": { "metric": "logistics and cloud scale", "bracket": "strong moat bracket", "score": 0.86 },
+          "capital_allocation": { "metric": "heavy reinvestment", "bracket": "mixed bracket", "score": 0.6 },
+          "management_alignment": { "metric": "operator-led culture", "bracket": "aligned bracket", "score": 0.68 },
+          "valuation_discipline": { "metric": "bear margin narrow", "bracket": "thin margin bracket", "score": 0.54 },
+          "balance_sheet_strength": { "metric": "manageable leverage", "bracket": "healthy bracket", "score": 0.72 }
+        }
+      },
+      "latest_tax_risk": {
+        "ticker": "AMZN",
+        "after_tax_downside_score": 0.72,
+        "asset_location_fit_score": 0.74,
+        "dividend_tax_efficiency_score": 0.9,
+        "exit_flexibility_score": 0.7,
+        "growth_tax_risk_score": 0.75,
+        "key_question_answer": "tax_does_not_threaten_return",
+        "tax_complexity_flags": [],
+        "professional_review_required": false,
+        "assumptions": [
+          "No dividend drag assumed.",
+          "Taxable lots assumed to be long-term."
+        ],
+        "computed_at": "2026-05-06T10:03:31-04:00"
+      }
+    },
+    {
+      "run_id": "growth_20260506_100000_manual",
+      "ticker": "TSLA",
+      "growth_total_score": 0.53,
+      "decision": "needs_review",
+      "decision_reason": "Quality score is volatile and insider/event complexity needs manual review.",
+      "iterations_used": 1,
+      "mutation_history": [],
+      "compliance_label": "research_only",
+      "score_trajectory": {
+        "ticker": "TSLA",
+        "score_trend": "deteriorating",
+        "trend_window_runs": 4,
+        "prior_scores": [0.68, 0.61, 0.56, 0.53],
+        "trend_direction": "deteriorating",
+        "run_dates": ["2026-04-15T18:00:00Z", "2026-04-22T18:00:00Z", "2026-04-29T18:00:00Z", "2026-05-06T18:00:00Z"],
+        "earnings_dates": []
+      },
+      "direction": "trim",
+      "horizon": "2m-6m",
+      "is_stale": false,
+      "ai_degraded": false,
+      "latest_evidence": {
+        "ticker": "TSLA",
+        "direction": "trim",
+        "horizon": "2m-6m",
+        "quality_scores": {
+          "revenue_growth": 0.5,
+          "earnings_quality": 0.42,
+          "roic_trend": 0.36,
+          "moat_durability": 0.64,
+          "capital_allocation": 0.58,
+          "management_alignment": 0.4,
+          "valuation_discipline": 0.46,
+          "balance_sheet_strength": 0.7
+        },
+        "growth_quality_score": 0.51,
+        "hard_rejection_flags": [],
+        "supporting_evidence": [
+          "Balance sheet strength remains adequate."
+        ],
+        "counter_evidence": [
+          "ROIC and earnings-quality trends deteriorated.",
+          "Management alignment score weakened after recent disclosures."
+        ],
+        "source_freshness": {
+          "financials": "2026-05-04T12:00:00-04:00"
+        },
+        "deterministic_summary": "TSLA is below the automatic accept range and deteriorated across the four-run window.",
+        "llm_summary": null,
+        "ai_degraded": false,
+        "computed_at": "2026-05-06T10:03:05-04:00",
+        "is_stale": false,
+        "quality_score_details": {
+          "revenue_growth": { "metric": "low single-digit growth", "bracket": "0-4.9% bracket", "score": 0.5 },
+          "earnings_quality": { "metric": "margin compression", "bracket": "weak bracket", "score": 0.42 },
+          "roic_trend": { "metric": "ROIC 8.2%", "bracket": "5-9.9% bracket", "score": 0.36 },
+          "moat_durability": { "metric": "brand and charging network", "bracket": "moderate moat bracket", "score": 0.64 },
+          "capital_allocation": { "metric": "capex variability", "bracket": "mixed bracket", "score": 0.58 },
+          "management_alignment": { "metric": "governance concern", "bracket": "weak bracket", "score": 0.4 },
+          "valuation_discipline": { "metric": "thin bear-case support", "bracket": "thin margin bracket", "score": 0.46 },
+          "balance_sheet_strength": { "metric": "net cash cushion", "bracket": "healthy bracket", "score": 0.7 }
+        }
+      },
+      "latest_tax_risk": {
+        "ticker": "TSLA",
+        "after_tax_downside_score": 0.48,
+        "asset_location_fit_score": 0.58,
+        "dividend_tax_efficiency_score": 0.9,
+        "exit_flexibility_score": 0.46,
+        "growth_tax_risk_score": 0.56,
+        "key_question_answer": "tax_threatens_return",
+        "tax_complexity_flags": ["concentrated_taxable_lot"],
+        "professional_review_required": true,
+        "assumptions": [
+          "Taxable concentrated lot assumed.",
+          "Large unrealized gain could limit exit flexibility."
+        ],
+        "computed_at": "2026-05-06T10:03:44-04:00"
+      }
+    },
+    {
+      "run_id": "growth_20260506_100000_manual",
+      "ticker": "XYZ",
+      "growth_total_score": 0.28,
+      "decision": "reject",
+      "decision_reason": "Hard rejection triggered by revenue decline and no credible free-cash-flow path.",
+      "iterations_used": 1,
+      "mutation_history": [
+        {
+          "iteration": 1,
+          "mutation_type": "terminal_reject",
+          "value": true,
+          "reason": "B1 hard rejection flags were present.",
+          "terminal": true
+        }
+      ],
+      "compliance_label": "research_only",
+      "score_trajectory": {
+        "ticker": "XYZ",
+        "score_trend": "insufficient_history",
+        "trend_window_runs": 1,
+        "prior_scores": [0.28],
+        "trend_direction": "insufficient_history",
+        "run_dates": ["2026-05-06T18:00:00Z"],
+        "earnings_dates": []
+      },
+      "direction": "avoid",
+      "horizon": "2m-6m",
+      "is_stale": false,
+      "ai_degraded": false,
+      "latest_evidence": {
+        "ticker": "XYZ",
+        "direction": "avoid",
+        "horizon": "2m-6m",
+        "quality_scores": {
+          "revenue_growth": 0.05,
+          "earnings_quality": 0.12,
+          "roic_trend": 0.08,
+          "moat_durability": 0.18,
+          "capital_allocation": 0.22,
+          "management_alignment": 0.3,
+          "valuation_discipline": 0.34,
+          "balance_sheet_strength": 0.26
+        },
+        "growth_quality_score": 0.18,
+        "hard_rejection_flags": ["revenue_decline_2y", "no_fcf_path"],
+        "supporting_evidence": [],
+        "counter_evidence": [
+          "Revenue declined for two consecutive years.",
+          "Free cash flow path is not credible in the configured horizon."
+        ],
+        "source_freshness": {
+          "financials": "2026-05-04T12:00:00-04:00"
+        },
+        "deterministic_summary": "XYZ failed B1 hard rejection gates.",
+        "llm_summary": null,
+        "ai_degraded": false,
+        "computed_at": "2026-05-06T10:03:11-04:00",
+        "is_stale": false
+      },
+      "latest_tax_risk": {
+        "ticker": "XYZ",
+        "after_tax_downside_score": 0.22,
+        "asset_location_fit_score": 0.4,
+        "dividend_tax_efficiency_score": 0.5,
+        "exit_flexibility_score": 0.3,
+        "growth_tax_risk_score": 0.32,
+        "key_question_answer": "tax_destroys_return",
+        "tax_complexity_flags": ["missing_tax_profile"],
+        "professional_review_required": true,
+        "assumptions": [
+          "Taxable account with missing profile.",
+          "Downside return already below inflation before taxes."
+        ],
+        "computed_at": "2026-05-06T10:03:55-04:00"
+      }
+    }
+  ],
+  "iterations": []
+}

@@ -1,0 +1,452 @@
+{
+  "run_id": "swing_20260506_093000_manual",
+  "system": "swing",
+  "mode": "manual",
+  "status": "completed",
+  "started_at": "2026-05-06T09:30:00-04:00",
+  "completed_at": "2026-05-06T09:33:42-04:00",
+  "counts": {
+    "accepted": 2,
+    "watchlist": 1,
+    "rejected": 1,
+    "needs_review": 1
+  },
+  "llm_calls_used": 4,
+  "april500_calls_used": 3,
+  "provider_cost_estimate_usd": 1.84,
+  "max_duration_seconds": 600,
+  "duration_seconds": 222,
+  "thresholds": {
+    "accept_threshold": 0.78,
+    "watchlist_threshold": 0.62,
+    "reject_threshold": 0.45
+  },
+  "research_only": true,
+  "universe": "merged",
+  "max_candidates": 25,
+  "max_finalists": 5,
+  "symbols_seen": 118,
+  "finalists": 5,
+  "candidates": [
+    {
+      "run_id": "swing_20260506_093000_manual",
+      "ticker": "NVDA",
+      "swing_total_score": 0.84,
+      "decision": "accept",
+      "decision_reason": "Breakout structure survived the critic pass with clean volume confirmation and acceptable stop geometry.",
+      "iterations_used": 2,
+      "mutation_history": [
+        {
+          "iteration": 1,
+          "mutation_type": "counter_evidence_expand",
+          "value": "earnings and sector beta",
+          "reason": "Initial setup needed a stronger bear-case check."
+        },
+        {
+          "iteration": 2,
+          "mutation_type": "terminal_accept",
+          "value": true,
+          "reason": "Counter-evidence did not break the thesis.",
+          "terminal": true
+        }
+      ],
+      "compliance_label": "research_only",
+      "direction": "long",
+      "horizon": "1w-3w",
+      "is_stale": false,
+      "ai_degraded": false,
+      "latest_evidence": {
+        "ticker": "NVDA",
+        "direction": "long",
+        "horizon": "1w-3w",
+        "timeframes_checked": ["1d", "5d", "1m", "3m"],
+        "feature_scores": {
+          "trend": 0.91,
+          "momentum": 0.88,
+          "volume": 0.86,
+          "volatility_quality": 0.74,
+          "sector_relative": 0.82,
+          "multi_timeframe_agreement": 0.85,
+          "april500": 0.79
+        },
+        "swing_discovery_score": 0.85,
+        "supporting_evidence": [
+          "Price held above the 20-day moving average after a high-volume expansion candle.",
+          "Semiconductor sector relative strength improved across the 5-day and 1-month windows.",
+          "April 500 scan showed bullish MACD and volume-flow agreement."
+        ],
+        "counter_evidence": [
+          "ATR widened over the last five sessions, increasing stop distance.",
+          "Large-cap AI theme remains crowded."
+        ],
+        "risk_flags": [],
+        "source_freshness": {
+          "daily_bars": "2026-05-06T09:28:00-04:00",
+          "sector": "2026-05-06T09:27:00-04:00"
+        },
+        "deterministic_summary": "NVDA ranked highest on trend, momentum, volume, and sector-relative agreement.",
+        "llm_summary": "The setup is technically strong, but the position needs a strict invalidation level because volatility is elevated.",
+        "ai_degraded": false,
+        "computed_at": "2026-05-06T09:31:20-04:00",
+        "is_stale": false,
+        "april500_details": {
+          "net_score": 0.79,
+          "signals": {
+            "bollinger": 0.72,
+            "rsi": 0.69,
+            "macd": 0.87,
+            "ichimoku": 0.76,
+            "volume_flow": 0.83
+          },
+          "bar_confluence": 0.67,
+          "support_resistance": "Support near prior breakout shelf; resistance above recent high.",
+          "multi_timeframe_outlook": "Bullish daily and 5-day alignment."
+        }
+      },
+      "latest_critique": {
+        "ticker": "NVDA",
+        "stop_geometry": {
+          "entry_zone": "near prior breakout retest",
+          "invalidation_level": 812.4,
+          "atr_distance": 1.35,
+          "risk_reward_estimate": 2.1
+        },
+        "event_risk": {
+          "earnings_within_48h": false,
+          "fomc_within_48h": false,
+          "sector_events": []
+        },
+        "liquidity_check": "pass",
+        "correlation_to_accepted": 0.22,
+        "critic_findings": [
+          "Stop is definable below the breakout shelf.",
+          "Liquidity clears the hypothetical research size floor."
+        ],
+        "risk_penalties": [
+          "Volatility expansion penalty: 0.04"
+        ],
+        "swing_critic_score": 0.83,
+        "verdict": "pass",
+        "computed_at": "2026-05-06T09:32:04-04:00"
+      }
+    },
+    {
+      "run_id": "swing_20260506_093000_manual",
+      "ticker": "AAPL",
+      "swing_total_score": 0.79,
+      "decision": "accept",
+      "decision_reason": "Mean-reversion setup has defined support, improving volume, and limited event risk.",
+      "iterations_used": 1,
+      "mutation_history": [
+        {
+          "iteration": 1,
+          "mutation_type": "terminal_accept",
+          "value": true,
+          "reason": "A1 and A2 scores cleared the accept threshold.",
+          "terminal": true
+        }
+      ],
+      "compliance_label": "research_only",
+      "direction": "long",
+      "horizon": "2d-5d",
+      "is_stale": false,
+      "ai_degraded": false,
+      "latest_evidence": {
+        "ticker": "AAPL",
+        "direction": "long",
+        "horizon": "2d-5d",
+        "timeframes_checked": ["1d", "5d", "1m"],
+        "feature_scores": {
+          "trend": 0.72,
+          "momentum": 0.76,
+          "volume": 0.81,
+          "volatility_quality": 0.8,
+          "sector_relative": 0.68,
+          "multi_timeframe_agreement": 0.75,
+          "april500": 0.77
+        },
+        "swing_discovery_score": 0.76,
+        "supporting_evidence": [
+          "Price reclaimed the 10-day moving average with volume above the 20-day median.",
+          "RSI recovered from the lower half of the recent range."
+        ],
+        "counter_evidence": [
+          "Relative strength is less compelling than the top semiconductor names."
+        ],
+        "risk_flags": [],
+        "source_freshness": {
+          "daily_bars": "2026-05-06T09:28:00-04:00"
+        },
+        "deterministic_summary": "AAPL showed a cleaner short-horizon reversal than broad market peers.",
+        "llm_summary": null,
+        "ai_degraded": false,
+        "computed_at": "2026-05-06T09:31:45-04:00",
+        "is_stale": false
+      },
+      "latest_critique": {
+        "ticker": "AAPL",
+        "stop_geometry": {
+          "entry_zone": "above reclaimed 10-day average",
+          "invalidation_level": 181.2,
+          "atr_distance": 1.1,
+          "risk_reward_estimate": 1.8
+        },
+        "event_risk": {
+          "earnings_within_48h": false,
+          "fomc_within_48h": false,
+          "sector_events": []
+        },
+        "liquidity_check": "pass",
+        "correlation_to_accepted": 0.18,
+        "critic_findings": [
+          "Stop geometry is clean for a short swing.",
+          "No near-term earnings blocker found."
+        ],
+        "risk_penalties": [],
+        "swing_critic_score": 0.82,
+        "verdict": "pass",
+        "computed_at": "2026-05-06T09:32:12-04:00"
+      }
+    },
+    {
+      "run_id": "swing_20260506_093000_manual",
+      "ticker": "MSFT",
+      "swing_total_score": 0.66,
+      "decision": "watchlist",
+      "decision_reason": "Trend quality is acceptable, but the critic wants a cleaner reward/risk window.",
+      "iterations_used": 2,
+      "mutation_history": [
+        {
+          "iteration": 1,
+          "mutation_type": "risk_filter_tighten",
+          "value": "ATR stop",
+          "reason": "Initial stop distance was wide for the expected move."
+        }
+      ],
+      "compliance_label": "research_only",
+      "direction": "neutral",
+      "horizon": "1w-3w",
+      "is_stale": false,
+      "ai_degraded": true,
+      "latest_evidence": {
+        "ticker": "MSFT",
+        "direction": "neutral",
+        "horizon": "1w-3w",
+        "timeframes_checked": ["1d", "5d", "1m", "3m"],
+        "feature_scores": {
+          "trend": 0.7,
+          "momentum": 0.63,
+          "volume": 0.58,
+          "volatility_quality": 0.66,
+          "sector_relative": 0.62,
+          "multi_timeframe_agreement": 0.64,
+          "april500": 0.61
+        },
+        "swing_discovery_score": 0.64,
+        "supporting_evidence": [
+          "The 3-month trend remains intact.",
+          "Pullback has not broken the higher-low structure."
+        ],
+        "counter_evidence": [
+          "Volume confirmation is weak.",
+          "Upside target is close to recent resistance."
+        ],
+        "risk_flags": [
+          "ai_degraded_provider_fallback"
+        ],
+        "source_freshness": {
+          "daily_bars": "2026-05-06T09:28:00-04:00"
+        },
+        "deterministic_summary": "MSFT is technically constructive but not forceful enough for acceptance.",
+        "llm_summary": "Provider fallback completed with a shorter critique summary.",
+        "ai_degraded": true,
+        "computed_at": "2026-05-06T09:32:01-04:00",
+        "is_stale": false
+      },
+      "latest_critique": {
+        "ticker": "MSFT",
+        "stop_geometry": {
+          "entry_zone": "near 20-day average",
+          "invalidation_level": 409.8,
+          "atr_distance": 1.8,
+          "risk_reward_estimate": 1.35
+        },
+        "event_risk": {
+          "earnings_within_48h": false,
+          "fomc_within_48h": false,
+          "sector_events": []
+        },
+        "liquidity_check": "pass",
+        "correlation_to_accepted": 0.31,
+        "critic_findings": [
+          "Reward/risk is below the preferred threshold.",
+          "Correlation to accepted mega-cap tech ideas is moderate."
+        ],
+        "risk_penalties": [
+          "Reward/risk penalty: 0.08"
+        ],
+        "swing_critic_score": 0.68,
+        "verdict": "watch",
+        "ai_degraded": true,
+        "computed_at": "2026-05-06T09:32:39-04:00"
+      }
+    },
+    {
+      "run_id": "swing_20260506_093000_manual",
+      "ticker": "TSLA",
+      "swing_total_score": 0.51,
+      "decision": "needs_review",
+      "decision_reason": "Setup has momentum, but the event window and volatility expansion require manual review.",
+      "iterations_used": 1,
+      "mutation_history": [],
+      "compliance_label": "research_only",
+      "direction": "avoid",
+      "horizon": "2d-5d",
+      "is_stale": false,
+      "ai_degraded": false,
+      "latest_evidence": {
+        "ticker": "TSLA",
+        "direction": "avoid",
+        "horizon": "2d-5d",
+        "timeframes_checked": ["1d", "5d", "1m"],
+        "feature_scores": {
+          "trend": 0.55,
+          "momentum": 0.71,
+          "volume": 0.69,
+          "volatility_quality": 0.38,
+          "sector_relative": 0.46,
+          "multi_timeframe_agreement": 0.49,
+          "april500": 0.0
+        },
+        "swing_discovery_score": 0.54,
+        "supporting_evidence": [
+          "Intraday momentum improved on the latest bounce."
+        ],
+        "counter_evidence": [
+          "Volatility quality is poor.",
+          "Multi-timeframe agreement is weak."
+        ],
+        "risk_flags": [
+          "event_risk_review"
+        ],
+        "source_freshness": {
+          "daily_bars": "2026-05-06T09:25:00-04:00"
+        },
+        "deterministic_summary": "TSLA needs a human review before it can be classified as a clean swing setup.",
+        "llm_summary": null,
+        "ai_degraded": false,
+        "computed_at": "2026-05-06T09:32:10-04:00",
+        "is_stale": false
+      },
+      "latest_critique": {
+        "ticker": "TSLA",
+        "stop_geometry": {
+          "entry_zone": null,
+          "invalidation_level": null,
+          "atr_distance": null,
+          "risk_reward_estimate": null
+        },
+        "event_risk": {
+          "earnings_within_48h": true,
+          "fomc_within_48h": false,
+          "sector_events": ["delivery update"]
+        },
+        "liquidity_check": "pass",
+        "correlation_to_accepted": 0.27,
+        "critic_findings": [
+          "No clean invalidation level after the volatility spike.",
+          "Near-term event risk blocks automatic promotion."
+        ],
+        "risk_penalties": [
+          "Event risk penalty: 0.18",
+          "Stop geometry penalty: 0.16"
+        ],
+        "swing_critic_score": 0.48,
+        "verdict": "needs_review",
+        "computed_at": "2026-05-06T09:32:44-04:00"
+      }
+    },
+    {
+      "run_id": "swing_20260506_093000_manual",
+      "ticker": "AMD",
+      "swing_total_score": 0.39,
+      "decision": "reject",
+      "decision_reason": "The candidate failed freshness and multi-timeframe checks.",
+      "iterations_used": 1,
+      "mutation_history": [
+        {
+          "iteration": 1,
+          "mutation_type": "terminal_reject",
+          "value": true,
+          "reason": "Stale required timeframe data.",
+          "terminal": true
+        }
+      ],
+      "compliance_label": "research_only",
+      "direction": "avoid",
+      "horizon": "1w-3w",
+      "is_stale": true,
+      "ai_degraded": false,
+      "latest_evidence": {
+        "ticker": "AMD",
+        "direction": "avoid",
+        "horizon": "1w-3w",
+        "timeframes_checked": ["1d", "5d", "1m"],
+        "feature_scores": {
+          "trend": 0.42,
+          "momentum": 0.44,
+          "volume": 0.37,
+          "volatility_quality": 0.41,
+          "sector_relative": 0.35,
+          "multi_timeframe_agreement": 0.31,
+          "april500": 0.0
+        },
+        "swing_discovery_score": 0.38,
+        "supporting_evidence": [
+          "Some 1-day momentum remains positive."
+        ],
+        "counter_evidence": [
+          "5-day and 1-month views disagree.",
+          "Required market data was stale beyond the run mode TTL."
+        ],
+        "risk_flags": [
+          "stale_data"
+        ],
+        "source_freshness": {
+          "daily_bars": "2026-05-05T15:58:00-04:00"
+        },
+        "deterministic_summary": "AMD did not clear the freshness gate.",
+        "llm_summary": null,
+        "ai_degraded": false,
+        "computed_at": "2026-05-06T09:31:58-04:00",
+        "is_stale": true
+      },
+      "latest_critique": {
+        "ticker": "AMD",
+        "stop_geometry": {
+          "entry_zone": null,
+          "invalidation_level": null,
+          "atr_distance": null,
+          "risk_reward_estimate": null
+        },
+        "event_risk": {
+          "earnings_within_48h": false,
+          "fomc_within_48h": false,
+          "sector_events": []
+        },
+        "liquidity_check": "warn",
+        "correlation_to_accepted": 0.45,
+        "critic_findings": [
+          "Stale timeframe invalidates the setup for this run."
+        ],
+        "risk_penalties": [
+          "Stale data penalty: 0.30"
+        ],
+        "swing_critic_score": 0.4,
+        "verdict": "reject",
+        "computed_at": "2026-05-06T09:32:18-04:00"
+      }
+    }
+  ],
+  "iterations": []
+}
