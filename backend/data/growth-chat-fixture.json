@@ -1,0 +1,34 @@
+{
+  "answer": "MSFT was accepted because the B1 quality packet remained strong across revenue growth, earnings quality, ROIC, moat durability, and balance sheet strength. The B2 tax-risk packet concluded that taxes do not threaten the return under the fixture assumptions, so tax risk did not offset the quality score.",
+  "citations": [
+    {
+      "chunk_id": "fixture_growth_evidence_MSFT_1",
+      "source_doc_id": "growth_20260506_100000_manual:MSFT:evidence:1",
+      "ticker": "MSFT",
+      "system": "growth",
+      "collection": "growth_evidence",
+      "score": 0.86,
+      "computed_at": "2026-05-06T10:02:18-04:00",
+      "is_stale": false,
+      "ai_degraded": false,
+      "snippet": "MSFT retained high quality across B1 dimensions with no hard rejection flags."
+    },
+    {
+      "chunk_id": "fixture_growth_tax_MSFT_1",
+      "source_doc_id": "growth_20260506_100000_manual:MSFT:tax:1",
+      "ticker": "MSFT",
+      "system": "growth",
+      "collection": "growth_tax_risk",
+      "score": 0.81,
+      "computed_at": "2026-05-06T10:03:14-04:00",
+      "is_stale": false,
+      "ai_degraded": false,
+      "snippet": "Tax does not threaten return under the paper-account fixture assumptions."
+    }
+  ],
+  "answer_grounded": true,
+  "compliance_label": "research_only",
+  "provider_used": "rule_based",
+  "ai_degraded": false,
+  "compliance_violation_detected": false
+}

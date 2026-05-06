@@ -1,0 +1,34 @@
+{
+  "answer": "NVDA was accepted because the A1 evidence packet scored strongly on trend, momentum, volume, sector-relative strength, and April 500 confirmation. The A2 critique found a definable stop below the breakout shelf, no 48-hour event blocker, and acceptable liquidity. The main counterweight was elevated volatility, which created a small penalty rather than a rejection.",
+  "citations": [
+    {
+      "chunk_id": "fixture_swing_evidence_NVDA_1",
+      "source_doc_id": "swing_20260506_093000_manual:NVDA:evidence:2",
+      "ticker": "NVDA",
+      "system": "swing",
+      "collection": "swing_evidence",
+      "score": 0.91,
+      "computed_at": "2026-05-06T09:31:20-04:00",
+      "is_stale": false,
+      "ai_degraded": false,
+      "snippet": "NVDA ranked highest on trend, momentum, volume, and sector-relative agreement."
+    },
+    {
+      "chunk_id": "fixture_swing_critique_NVDA_1",
+      "source_doc_id": "swing_20260506_093000_manual:NVDA:critique:2",
+      "ticker": "NVDA",
+      "system": "swing",
+      "collection": "swing_critique",
+      "score": 0.83,
+      "computed_at": "2026-05-06T09:32:04-04:00",
+      "is_stale": false,
+      "ai_degraded": false,
+      "snippet": "Stop is definable below the breakout shelf, and liquidity clears the hypothetical research size floor."
+    }
+  ],
+  "answer_grounded": true,
+  "compliance_label": "research_only",
+  "provider_used": "rule_based",
+  "ai_degraded": false,
+  "compliance_violation_detected": false
+}
