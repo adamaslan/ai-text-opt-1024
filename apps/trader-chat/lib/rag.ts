@@ -44,9 +44,11 @@ async function embedQuery(text: string): Promise<number[]> {
 
 export async function queryTrader(
   queryText: string,
-  trader: TraderTag,
+  trader: TraderTag | TraderTag[],
   nResults = RAG_TOP_K
 ): Promise<RagResult> {
+  const traders = Array.isArray(trader) ? trader : [trader];
+  const sourceFiles = traders.map((t) => TRADER_FILES[t]);
   const [queryEmbedding, collection] = await Promise.all([
     embedQuery(queryText),
     getCollection(),
@@ -56,7 +58,7 @@ export async function queryTrader(
     queryEmbeddings: [queryEmbedding],
     nResults,
     include: ["documents", "metadatas", "distances"] as any,
-    where:   { source_file: TRADER_FILES[trader] },
+    where:   { source_file: { $in: sourceFiles } },
   } as any);
 
   const ids:   string[] = raw.ids[0]           ?? [];
@@ -70,7 +72,9 @@ export async function queryTrader(
 
   if (!filtered.length) return { context: "", sources: [], empty: true };
 
-  const context = filtered.map((r) => r.doc).join("\n\n---\n\n");
+  const context = filtered
+    .map((r, i) => `[S${i + 1}] (${r.meta?.source_file ?? "?"}#${r.meta?.chunk_index ?? 0})\n${r.doc}`)
+    .join("\n\n");
   const sources: RagSource[] = filtered.map((r) => ({
     text_preview: r.meta?.text_preview ?? r.doc?.slice(0, 200) ?? "",
     source_file:  r.meta?.source_file  ?? "",
@@ -80,12 +84,17 @@ export async function queryTrader(
 
   console.log(JSON.stringify({
     event:      "rag_query",
-    trader,
+    trader:     traders.join("+"),
     n_returned: filtered.length,
     collection: COLLECTION_NAME,
   }));
 
   return { context, sources, empty: false };
+}
+
+/** Comparison questions need both traders' knowledge, not just the selected one. */
+export function isComparisonQuery(query: string): boolean {
+  return /\b(compare|comparison|versus|vs\.?|difference|differ)\b/i.test(query);
 }
 
 export function buildPrompt(
@@ -109,8 +118,9 @@ Question: ${query}`;
 Answer the following question using the context below, which comes directly from ${profile} knowledge base.
 Be specific, actionable, and stay true to the ${trader} philosophy.
 
-Context:
+<context>
 ${ragResult.context}
+</context>
 
 Question: ${query}`;
 }

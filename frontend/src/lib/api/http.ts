@@ -20,5 +20,7 @@ export async function requestJson<T>(path: string, init?: RequestInit): Promise<
     throw new Error(message);
   }
 
-  return { data: body as T, researchOnlyHeader };
+  const isFixture = response.headers.get("X-Data-Source") === "local-fixture";
+
+  return { data: body as T, researchOnlyHeader, isFixture };
 }

@@ -161,7 +161,7 @@ export default function TraderChatPage() {
                 Trader Chat
               </h1>
               <p style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "1px" }}>
-                {cfg.desc} · Gemini + ChromaDB
+                {cfg.desc} · OpenRouter + ChromaDB
               </p>
             </div>
           </div>

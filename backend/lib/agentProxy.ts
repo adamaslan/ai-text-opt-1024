@@ -108,7 +108,16 @@ export async function proxyAgentJson(
       headers: forwardedHeaders(request),
     });
 
-    if (!response.ok) return await fixtureResponse(fallbackFile, fallbackRunId);
+    // Fixtures stand in for an unreachable backend (5xx / network), not for a
+    // rejected request: 4xx means bad input or auth and must reach the caller.
+    if (response.status >= 500) return await fixtureResponse(fallbackFile, fallbackRunId);
+    if (!response.ok) {
+      const errorBody = await parseJsonResponse(response).catch(() => null);
+      return NextResponse.json(errorBody ?? { error: `Upstream ${response.status}` }, {
+        status: response.status,
+        headers: { ...RESEARCH_HEADERS, "X-Data-Source": "gcp3" },
+      });
+    }
 
     const payload = await parseJsonResponse(response);
     if (!payload) return await fixtureResponse(fallbackFile, fallbackRunId);

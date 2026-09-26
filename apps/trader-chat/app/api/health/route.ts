@@ -23,7 +23,7 @@ export async function GET() {
     checks.embed_service = "error";
   }
 
-  checks.llm = process.env.GEMINI_API_KEY ? "ok" : "error";
+  checks.llm = process.env.OPENROUTER_API_KEY ? "ok" : "error";
 
   const allOk = Object.values(checks).every((v) => v === "ok");
   return NextResponse.json(

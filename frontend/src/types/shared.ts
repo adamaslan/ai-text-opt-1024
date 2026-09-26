@@ -82,4 +82,6 @@ export interface TriggerRunResponse {
 export interface ApiResult<T> {
   data: T;
   researchOnlyHeader: boolean;
+  /** True when the proxy served bundled fixture data instead of the live backend. */
+  isFixture: boolean;
 }

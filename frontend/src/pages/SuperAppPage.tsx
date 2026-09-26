@@ -74,7 +74,7 @@ const tools: ToolNode[] = [
   { name: "yfinance", job: "OHLCV fetch and fallback quote history", status: "ready" },
   { name: "Indicator Engine", job: "RSI, MACD, ATR, Bollinger, stochastic, Fibonacci", status: "live" },
   { name: "Signal Detector", job: "Strength scoring across bullish, bearish, neutral, weak", status: "live" },
-  { name: "Gemini/Mistral", job: "Provider-swappable AI analysis with retry and critique passes", status: "ready" },
+  { name: "OpenRouter", job: "Provider-swappable AI analysis with retry and critique passes", status: "ready" },
   { name: "Chroma/Zilliz", job: "Trader memory, documents, reports, and semantic retrieval", status: "ready" },
   { name: "Voyage Rerank", job: "Compress noisy evidence into the most useful source set", status: "queued" },
   { name: "Firestore", job: "Cached analysis, signals, AI outputs, and daily snapshots", status: "live" },

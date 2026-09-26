@@ -58,7 +58,7 @@ async def startup() -> None:
 
 class EmbedRequest(BaseModel):
     texts: List[str]
-    is_query: bool = True  # True = add "Query: " prefix for e5 models
+    is_query: bool = True  # True = add "query: " prefix for e5 models
 
 
 class EmbedResponse(BaseModel):
@@ -68,14 +68,15 @@ class EmbedResponse(BaseModel):
 
 
 @app.post("/embed", response_model=EmbedResponse)
-async def embed(req: EmbedRequest) -> EmbedResponse:
+def embed(req: EmbedRequest) -> EmbedResponse:
     if not req.texts:
         raise HTTPException(status_code=400, detail="texts must be non-empty")
 
     model = get_model()
-    # e5 asymmetric prefix: queries get "Query: ", indexed passages get "Passage: "
-    # (applied in ingest.py). Mismatching the prefix at query time degrades recall.
-    prefix = "Query: " if req.is_query and "e5" in MODEL_NAME.lower() else ""
+    # e5 asymmetric prefix: queries get "query: ", indexed passages get "passage: "
+    # (applied in ingest.py). Plain `def` so FastAPI runs the blocking encode()
+    # in its threadpool instead of stalling the event loop. Mismatching the prefix at query time degrades recall.
+    prefix = "query: " if req.is_query and "e5" in MODEL_NAME.lower() else ""
     processed = [f"{prefix}{t.strip()}" if t.strip() else "" for t in req.texts]
 
     try:
