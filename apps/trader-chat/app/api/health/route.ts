@@ -1,6 +1,7 @@
 // GET /api/health
 
 import { NextResponse } from "next/server";
+import { checkOpenRouterKey } from "@/lib/openrouter";
 import { getChromaClient } from "@/lib/chroma";
 
 export async function GET() {
@@ -23,7 +24,7 @@ export async function GET() {
     checks.embed_service = "error";
   }
 
-  checks.llm = process.env.OPENROUTER_API_KEY ? "ok" : "error";
+  checks.llm = (await checkOpenRouterKey()) ? "ok" : "error";
 
   const allOk = Object.values(checks).every((v) => v === "ok");
   return NextResponse.json(

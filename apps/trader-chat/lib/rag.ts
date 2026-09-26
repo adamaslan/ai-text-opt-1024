@@ -63,7 +63,7 @@ export async function queryTrader(
 
   const ids:   string[] = raw.ids[0]           ?? [];
   const docs:  string[] = (raw.documents[0]    ?? []) as string[];
-  const dists: number[] = raw.distances[0]     ?? [];
+  const dists: number[] = raw.distances?.[0]    ?? [];
   const metas: any[]    = raw.metadatas[0]     ?? [];
 
   const filtered = ids

@@ -115,3 +115,32 @@ export async function chatCompletion(
   if (lastEmpty) throw lastEmpty;
   throw new LLMUnavailableError(lastStatus);
 }
+
+const KEY_CHECK_TTL_MS = 60_000;
+const KEY_CHECK_TIMEOUT_MS = 3_000;
+let keyCheck: { at: number; ok: boolean } | null = null;
+
+/**
+ * Health probe: true only if OPENROUTER_API_KEY is set AND OpenRouter accepts it.
+ * Hits the free /auth/key endpoint (no model quota used); result cached for 60s
+ * so frequent health polling doesn't hammer OpenRouter. A network failure counts
+ * as unhealthy.
+ */
+export async function checkOpenRouterKey(): Promise<boolean> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return false;
+  if (keyCheck && Date.now() - keyCheck.at < KEY_CHECK_TTL_MS) return keyCheck.ok;
+  let ok = false;
+  try {
+    const res = await fetch(`${OR_BASE}/auth/key`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(KEY_CHECK_TIMEOUT_MS),
+    });
+    ok = res.ok;
+    await res.body?.cancel().catch(() => {});
+  } catch {
+    ok = false;
+  }
+  keyCheck = { at: Date.now(), ok };
+  return ok;
+}
