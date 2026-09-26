@@ -2,6 +2,9 @@ require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") }
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ["chromadb"],
+  },
   async headers() {
     return [
       {

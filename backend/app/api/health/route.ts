@@ -1,7 +1,8 @@
 // app/api/health/route.ts
-// GET /api/health — aggregate health: ChromaDB + embed service + LLM env check.
+// GET /api/health — aggregate health: ChromaDB + embed service + LLM key check (OpenRouter).
 
 import { NextResponse } from "next/server";
+import { checkOpenRouterKey } from "@/lib/openrouter";
 import { getChromaClient, getLastHealthy } from "@/lib/chroma";
 
 export async function GET() {
@@ -26,13 +27,8 @@ export async function GET() {
     checks.embed_service = "error";
   }
 
-  // LLM env (just key presence — don't call the API)
-  const provider = process.env.LLM_PROVIDER ?? "gemini";
-  const hasKey =
-    provider === "gemini"
-      ? !!process.env.GEMINI_API_KEY
-      : !!process.env.MISTRAL_API_KEY;
-  checks.llm = hasKey ? "ok" : "error";
+  // LLM: key must be set and accepted by OpenRouter (cached probe)
+  checks.llm = (await checkOpenRouterKey()) ? "ok" : "error";
 
   const allOk = Object.values(checks).every((v) => v === "ok");
 

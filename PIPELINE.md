@@ -3,8 +3,9 @@
 Complete flow from frontend user input through chunking, embedding, and RAG retrieval to LLM response.
 
 > **Monorepo layout** — two independent Next.js apps share the same ChromaDB collection and embed service:
-> - `apps/trader-chat/` — trader persona UI (T1/T2), Gemini with tool-use, port 3002
-> - `backend/` — general RAG backend, Gemini + Mistral, port 3001
+> - `apps/trader-chat/` — trader persona UI (T1/T2), OpenRouter free-model chain, port 3002
+> - `backend/` — general RAG backend, OpenRouter free-model chain, port 3001
+> - **LLM (updated 2026-09-25):** both apps call OpenRouter via `lib/openrouter.ts` (same fallback approach as nuwrrrld-portal; set `OPENROUTER_API_KEY`, optional `OPENROUTER_MODELS`). Sections below that describe Gemini/Mistral and tool-use are historical.
 > - `embed_service.py` — shared FastAPI embedding service, port 8001
 > - `ingest.py` — offline ingestion pipeline (run once, or on doc changes)
 

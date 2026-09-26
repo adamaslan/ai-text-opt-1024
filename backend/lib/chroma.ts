@@ -8,7 +8,7 @@
 // Cost note: always pass pre-computed embeddings; embedding_function is never
 // set so Chroma never calls an external embedding API.
 
-import { ChromaClient, CloudClient, Collection } from "chromadb";
+import { ChromaClient, CloudClient, Collection, type IEmbeddingFunction } from "chromadb";
 
 export class ChromaUnavailableError extends Error {
   constructor(msg: string) {
@@ -42,6 +42,12 @@ export const COLLECTION_NAME = `${COLLECTION_BASE}_v${COLLECTION_VERSION}_stagin
 
 let _client: ChromaClient | null = null;
 let _lastHealthy = false;
+
+const PRECOMPUTED_EMBEDDINGS_ONLY: IEmbeddingFunction = {
+  async generate() {
+    throw new Error("Chroma queries must pass pre-computed embeddings.");
+  },
+};
 
 export function getRawClient(): ChromaClient {
   if (_client) return _client;
@@ -80,7 +86,7 @@ export function getLastHealthy(): boolean {
 /** Return the active collection (embedding_function=null — we pass vectors). */
 export async function getCollection(): Promise<Collection> {
   const client = await getChromaClient();
-  return client.getCollection({ name: COLLECTION_NAME, embeddingFunction: undefined });
+  return client.getCollection({ name: COLLECTION_NAME, embeddingFunction: PRECOMPUTED_EMBEDDINGS_ONLY });
 }
 
 /** Field names used across all query calls. */

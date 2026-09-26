@@ -6,7 +6,7 @@ const MOCK_CHAT_RESPONSE = {
   answer:
     "T1 traders use momentum breakouts with tight stops, typically risking 1–2% per trade.",
   tool_calls: [],
-  llm_provider: "gemini",
+  llm_provider: "openrouter",
   trader: "T1",
   sources: [
     {

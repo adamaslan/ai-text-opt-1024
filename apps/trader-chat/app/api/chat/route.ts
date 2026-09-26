@@ -2,7 +2,7 @@
 // Required body: { message: string; trader: "T1" | "T2" }
 
 import { NextRequest, NextResponse } from "next/server";
-import { queryTrader, buildPrompt, TraderTag } from "@/lib/rag";
+import { queryTrader, buildPrompt, isComparisonQuery, TraderTag } from "@/lib/rag";
 import { callLLM, getLLMProvider } from "@/lib/llm";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -44,7 +44,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const ragResult = await queryTrader(message, trader);
+    const ragResult = await queryTrader(
+      message,
+      isComparisonQuery(message) ? ["T1", "T2"] : trader,
+    );
     const prompt    = buildPrompt(message, trader, ragResult);
     const llmResult = await callLLM(prompt);
 
@@ -52,6 +55,7 @@ export async function POST(req: NextRequest) {
       answer:        llmResult.text,
       tool_calls:    llmResult.tool_calls,
       llm_provider:  getLLMProvider(),
+      model:         llmResult.model,
       trader,
       sources:       ragResult.sources.map((s) => ({
         text_preview:  s.text_preview,
@@ -63,7 +67,13 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: any) {
     console.error("Chat route error:", err);
-    const status = err.name === "ChromaUnavailableError" ? 503 : 500;
-    return NextResponse.json({ error: err.message ?? "Internal server error" }, { status });
+    // Never forward upstream error text (it can include provider response bodies).
+    if (err.name === "ChromaUnavailableError") {
+      return NextResponse.json({ error: "Knowledge base unavailable" }, { status: 503 });
+    }
+    if (err.name === "LLMUnavailableError" || err.name === "LLMEmptyResponseError") {
+      return NextResponse.json({ error: "AI model unavailable, please retry shortly" }, { status: 503 });
+    }
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

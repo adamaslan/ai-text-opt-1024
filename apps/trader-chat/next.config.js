@@ -4,6 +4,10 @@ require("dotenv").config({
 });
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ["chromadb"],
+  },
+};
 
 module.exports = nextConfig;

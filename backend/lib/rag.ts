@@ -38,6 +38,7 @@ async function embedQuery(text: string): Promise<number[]> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ texts: [text], is_query: true }),
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) {
     throw new Error(`Embed service error ${res.status}: ${await res.text()}`);
@@ -87,10 +88,10 @@ export async function queryChroma(
 
   const raw = await collection.query(queryArgs as any);
 
-  const ids: string[] = raw.ids[0] ?? [];
-  const docs: string[] = (raw.documents[0] ?? []) as string[];
-  const dists: number[] = raw.distances[0] ?? [];
-  const metas: any[] = raw.metadatas[0] ?? [];
+  const ids: string[] = raw.ids?.[0] ?? [];
+  const docs: string[] = (raw.documents?.[0] ?? []) as string[];
+  const dists: number[] = (raw.distances?.[0] ?? []) as number[];
+  const metas: any[] = raw.metadatas?.[0] ?? [];
 
   // Filter by score threshold (cosine distance — lower is better)
   const filtered = ids
@@ -117,7 +118,9 @@ export async function queryChroma(
     return { context: "", sources: [], empty: true };
   }
 
-  const context = filtered.map((r) => r.doc).join("\n\n---\n\n");
+  const context = filtered
+    .map((r, i) => `[S${i + 1}] (${r.meta?.source_file ?? "?"}#${r.meta?.chunk_index ?? 0})\n${r.doc}`)
+    .join("\n\n");
   const sources: RagSource[] = filtered.map((r) => ({
     text_preview: r.meta?.text_preview ?? r.doc?.slice(0, 200) ?? "",
     source_file: r.meta?.source_file ?? "",
@@ -157,8 +160,9 @@ Question: ${query}`;
   return `You are a trading assistant. Answer the following question based on the context below.
 If the context does not contain enough information, say so clearly.
 
-Context:
+<context>
 ${ragResult.context}
+</context>
 
 Question: ${query}`;
 }

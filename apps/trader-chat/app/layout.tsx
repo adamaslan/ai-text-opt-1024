@@ -3,7 +3,7 @@ import "../styles/globals.css";
 
 export const metadata: Metadata = {
   title:       "Trader Chat",
-  description: "T1 & T2 trader chatbot powered by ChromaDB + Gemini",
+  description: "T1 & T2 trader chatbot powered by ChromaDB + OpenRouter",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,7 +1,7 @@
 // lib/chroma.ts — ChromaDB client for trader-chat.
 // Reads from the same collection already ingested by ai-text-opt-1024.
 
-import { ChromaClient, CloudClient, Collection } from "chromadb";
+import { ChromaClient, CloudClient, Collection, type IEmbeddingFunction } from "chromadb";
 
 export class ChromaUnavailableError extends Error {
   constructor(msg: string) {
@@ -27,6 +27,14 @@ if (mode === "cloud") {
 const COLLECTION_BASE    = process.env.CHROMA_COLLECTION ?? "ideas_1024d";
 const COLLECTION_VERSION = process.env.CHROMA_COLLECTION_VERSION ?? "2";
 export const COLLECTION_NAME = `${COLLECTION_BASE}_v${COLLECTION_VERSION}_staging`;
+
+// Queries always pass pre-computed embeddings; this guards against Chroma ever
+// trying to embed on its own (which would pull in the bundled default embedder).
+const PRECOMPUTED_EMBEDDINGS_ONLY: IEmbeddingFunction = {
+  async generate() {
+    throw new Error("Chroma queries must pass pre-computed embeddings.");
+  },
+};
 
 let _client: ChromaClient | null = null;
 
@@ -58,5 +66,5 @@ export async function getChromaClient(): Promise<ChromaClient> {
 
 export async function getCollection(): Promise<Collection> {
   const client = await getChromaClient();
-  return client.getCollection({ name: COLLECTION_NAME, embeddingFunction: undefined });
+  return client.getCollection({ name: COLLECTION_NAME, embeddingFunction: PRECOMPUTED_EMBEDDINGS_ONLY });
 }

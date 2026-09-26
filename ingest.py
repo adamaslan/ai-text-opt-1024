@@ -63,7 +63,7 @@ EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "intfloat/e5-large-v2")
 BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "32"))
 
 # File-type-aware chunking. e5-large-v2 truncates at 512 tokens, and the
-# "Passage: " prefix consumes ~2, so prose ceiling is 480.
+# "passage: " prefix consumes ~2, so prose ceiling is 480.
 PROSE_CHUNK_SIZE = int(os.getenv("PROSE_CHUNK_SIZE", "480"))
 PROSE_CHUNK_OVERLAP = int(os.getenv("PROSE_CHUNK_OVERLAP", "96"))
 QA_CHUNK_SIZE = int(os.getenv("QA_CHUNK_SIZE", "300"))
@@ -74,6 +74,11 @@ MIN_CHUNK_TOKENS = int(os.getenv("MIN_CHUNK_TOKENS", "80"))
 QA_PATTERNS = ("t1-", "t2-", "-qa.md", "-100-questions")
 
 MAX_BATCH_RETRIES = 3
+
+# Folded into every content hash so changing how passages are embedded (e.g. the
+# e5 prefix casing) invalidates the checkpoint and forces a re-embed even though
+# the chunk text itself is unchanged. Bump alongside CHROMA_COLLECTION_VERSION.
+EMBED_FORMAT_TAG = "e5-lowercase-prefix-v1"
 
 CHECKPOINT_FILE = Path("data/ingest.checkpoint.json")
 BUDGET_SOFT = float(os.getenv("CHROMA_BUDGET_SOFT", "5.00"))
@@ -152,7 +157,14 @@ def load_markdown_docs(docs_root: Path) -> List[Document]:
             if not text:
                 logger.warning("Skipping empty file: %s", path.name)
                 continue
-            documents.append(Document(text=text, metadata={"source_file": path.name}))
+            # source_file stays the bare filename (retrieval filters match on it);
+            # source_path (relative) is what keeps same-named files in different
+            # folders from colliding on chunk IDs.
+            rel_path = path.relative_to(docs_root).as_posix()
+            documents.append(Document(
+                text=text,
+                metadata={"source_file": path.name, "source_path": rel_path},
+            ))
             logger.info("Loaded %s (%d chars)", path.name, len(text))
         except Exception as exc:
             logger.error("Failed to read %s: %s", path.name, exc)
@@ -198,7 +210,8 @@ def build_chunks(documents: List[Document]) -> List[Chunk]:
         source_file = doc.metadata.get("source_file", "unknown")
         splitter = _splitter_for(source_file)
         nodes = splitter.get_nodes_from_documents([doc])
-        file_hash = _sha1(source_file)
+        file_hash = _sha1(doc.metadata.get("source_path", source_file))
+        chunk_idx = 0
 
         for node in nodes:
             text = node.get_content().strip()
@@ -212,17 +225,17 @@ def build_chunks(documents: List[Document]) -> List[Chunk]:
                 short_skipped += 1
                 continue
 
-            chunk_idx = sum(1 for c in chunks if c.source_file == source_file)
             chunk_id = f"{file_hash}_{chunk_idx:05d}"
 
             chunks.append(Chunk(
                 chunk_id=chunk_id,
                 text=text,
-                content_hash=_sha1(text),
+                content_hash=_sha1(f"{EMBED_FORMAT_TAG}\n{text}"),
                 source_file=source_file,
                 chunk_index=chunk_idx,
                 char_len=len(text),
             ))
+            chunk_idx += 1
 
     if short_skipped:
         logger.info("Filtered %d sub-%d-token stub chunks", short_skipped, MIN_CHUNK_TOKENS)
@@ -246,11 +259,11 @@ class EmbeddingModel:
         logger.info("Embedding model ready: %dD verified", DIMS)
 
     def _preprocess(self, text: str) -> str:
-        # e5 models require asymmetric prefixes: "Passage: " at index time,
-        # "Query: " at query time. Without these the model produces lower-quality
+        # e5 models require asymmetric prefixes: "passage: " at index time,
+        # "query: " at query time (lowercase — that is what they were trained on). Without these the model produces lower-quality
         # embeddings because it was fine-tuned with them.
         if "e5" in self.model_name.lower():
-            return f"Passage: {text}"
+            return f"passage: {text}"
         return text
 
     def encode_batch(self, texts: List[str]) -> np.ndarray:
@@ -349,6 +362,13 @@ def upsert_chunks(
                 time.sleep(wait)
 
 
+def prune_stale_chunks(collection, stale_ids: List[str]) -> None:
+    """Delete chunk IDs that are no longer produced by the current docs."""
+    for start in range(0, len(stale_ids), UPSERT_BATCH_SIZE):
+        collection.delete(ids=stale_ids[start:start + UPSERT_BATCH_SIZE])
+    logger.info("Pruned %d stale chunks", len(stale_ids))
+
+
 # ── Atomic staging swap ───────────────────────────────────────────────────────
 
 def validate_and_swap(client, staging_name: str, target_name: str, expected_count: int) -> None:
@@ -404,6 +424,19 @@ def main() -> int:
     # text changed. Changing chunk_size invalidates all hashes — bump
     # CHROMA_COLLECTION_VERSION when doing so to land in a fresh collection.
     checkpoint = load_checkpoint()
+
+    # Chunks that no longer exist (file removed, doc shrank, IDs re-keyed) would
+    # otherwise stay in the collection and keep being retrieved.
+    stale_ids = sorted(set(checkpoint) - {c.chunk_id for c in chunks})
+    if stale_ids:
+        try:
+            prune_stale_chunks(get_or_create_collection(get_chroma_client(), STAGING_NAME), stale_ids)
+        except Exception as exc:
+            logger.error("Pruning stale chunks failed: %s", exc)
+            return 1
+        for stale_id in stale_ids:
+            checkpoint.pop(stale_id, None)
+        save_checkpoint(checkpoint)
     new_chunks = [c for c in chunks if checkpoint.get(c.chunk_id) != c.content_hash]
     skipped = len(chunks) - len(new_chunks)
     if skipped:

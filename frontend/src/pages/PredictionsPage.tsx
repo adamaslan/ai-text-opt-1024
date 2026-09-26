@@ -264,7 +264,7 @@ export default function PredictionsPage() {
       {status === "loading" && !data && (
         <div className="loading-state">
           <div className="spinner" />
-          <span>Scanning {data ? data.total_analyzed : "50+"} stocks…</span>
+          <span>Scanning 50+ stocks...</span>
         </div>
       )}
 

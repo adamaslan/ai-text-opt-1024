@@ -70,7 +70,13 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: any) {
     console.error("Chat route error:", err);
-    const status = err.name === "ChromaUnavailableError" ? 503 : 500;
-    return NextResponse.json({ error: err.message ?? "Internal server error" }, { status });
+    // Never forward upstream error text (it can include provider response bodies).
+    if (err.name === "ChromaUnavailableError") {
+      return NextResponse.json({ error: "Knowledge base unavailable" }, { status: 503 });
+    }
+    if (err.name === "LLMUnavailableError" || err.name === "LLMEmptyResponseError") {
+      return NextResponse.json({ error: "AI model unavailable, please retry shortly" }, { status: 503 });
+    }
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

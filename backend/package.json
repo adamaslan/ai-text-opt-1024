@@ -1,7 +1,7 @@
 {
   "name": "ai-text-opt-1024-backend",
   "version": "0.1.0",
-  "description": "ChromaDB RAG backend — 1024D local embeddings + Gemini/Mistral",
+  "description": "ChromaDB RAG backend — 1024D local embeddings + OpenRouter",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
